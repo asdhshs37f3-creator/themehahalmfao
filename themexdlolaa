@@ -1884,17 +1884,103 @@
 						task.spawn(function()
 							local savedCFrame = myHRP.CFrame
 
+							-- Equip the gun (Double-Barrel SG)
+							local db = lp.Backpack:FindFirstChild("[Double-Barrel SG]") or lp.Character:FindFirstChild("[Double-Barrel SG]")
+							if not db then
+								for _, tool in ipairs(lp.Backpack:GetChildren()) do
+									if tool:IsA("Tool") and (tool.Name:lower():find("double") or tool.Name:lower():find("db")) then
+										db = tool
+										break
+									end
+								end
+							end
+							if not db then
+								for _, tool in ipairs(lp.Backpack:GetChildren()) do
+									if tool:IsA("Tool") then
+										db = tool
+										break
+									end
+								end
+							end
+
+							if db then
+								lp.Character.Humanoid:EquipTool(db)
+								task.wait(0.1)
+							else
+								library:notification({text = "No gun found to equip", time = 2})
+							end
+
 							-- teleport to them
 							myHRP.CFrame = targetHRP.CFrame + Vector3.new(0, 3, 0)
 							task.wait(0.1)
 
-							-- kill them
-							targetHum.Health = 0
-							task.wait(0.1)
+							-- shoot them until knocked out (Health <= 15)
+							local shootStart = tick()
+							while targetHum and targetHum.Health > 15 and (tick() - shootStart) < 3 do
+								local Head = target.Character:FindFirstChild("SpecialParts") and target.Character.SpecialParts:FindFirstChild("Head") or target.Character:FindFirstChild("Head")
+								if Head and myHRP then
+									-- keep character next to target while shooting
+									myHRP.CFrame = targetHRP.CFrame + Vector3.new(0, 3, 0)
+
+									local args = {
+										[1] = "Shoot",
+										[2] = {
+											[1] = {
+												[1] = {Normal = Head.Position, Instance = Head, Position = Head.Position},
+												[2] = {Normal = Head.Position, Instance = Head, Position = Head.Position},
+												[3] = {Normal = Head.Position, Instance = Head, Position = Head.Position},
+												[4] = {Normal = Head.Position, Instance = Head, Position = Head.Position},
+												[5] = {Normal = Head.Position, Instance = Head, Position = Head.Position},
+											},
+											[2] = {
+												[1] = {thePart = Head, theOffset = Vector3.new()},
+												[2] = {thePart = Head, theOffset = Vector3.new()},
+												[3] = {thePart = Head, theOffset = Vector3.new()},
+												[4] = {thePart = Head, theOffset = Vector3.new()},
+												[5] = {thePart = Head, theOffset = Vector3.new()},
+											},
+											[3] = myHRP.Position,
+											[4] = myHRP.Position,
+											[5] = workspace:GetServerTimeNow(),
+										}
+									}
+									local MainEvent = rs:FindFirstChild("MainEvent")
+									if MainEvent then
+										MainEvent:FireServer(unpack(args))
+									end
+								end
+								task.wait(0.1)
+							end
+
+							-- grab them
+							local grabStart = tick()
+							local grabbed = false
+							while (tick() - grabStart) < 1.5 do
+								if target.Character:FindFirstChild("GRABBING_CONSTRAINT") or lp.Character:FindFirstChild("GRABBING_CONSTRAINT") then
+									grabbed = true
+									break
+								end
+								myHRP.CFrame = targetHRP.CFrame + Vector3.new(0, 1, 0)
+								local MainEvent = rs:FindFirstChild("MainEvent")
+								if MainEvent then
+									MainEvent:FireServer("Grabbing", false)
+								end
+								pcall(function()
+									local vim = game:GetService("VirtualInputManager")
+									vim:SendKeyEvent(true, Enum.KeyCode.G, false, game)
+									task.wait(0.05)
+									vim:SendKeyEvent(false, Enum.KeyCode.G, false, game)
+								end)
+								task.wait(0.2)
+							end
 
 							-- go back
 							myHRP.CFrame = savedCFrame
-							library:notification({text = "Killed " .. sel .. " and returned", time = 2})
+							if grabbed then
+								library:notification({text = "Brought " .. sel, time = 2})
+							else
+								library:notification({text = "Killed but failed to grab " .. sel, time = 2})
+							end
 						end)
 					end})
 				end

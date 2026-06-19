@@ -1820,7 +1820,7 @@
 					library.prioritize(text)
 				end})
 
-				do -- Goto / Bring buttons
+				do -- Goto / Playlist buttons
 					section:button_holder({flag = "PLAYERLIST_ACTIONS"})
 
 					section:button({name = "Goto", callback = function()
@@ -1853,153 +1853,20 @@
 						end
 					end})
 
-					section:button({name = "Bring", callback = function()
+					section:button({name = "Add to Playlist", callback = function()
 						local sel = library.selected_player
 						if not sel then
 							library:notification({text = "No player selected", time = 2})
 							return
 						end
 
-						local target = players:FindFirstChild(sel)
-						if not target or not target.Character then
-							library:notification({text = sel .. " has no character", time = 2})
-							return
+						if library.playlist[sel] then
+							library.playlist[sel] = nil
+							library:notification({text = "Removed " .. sel .. " from playlist", time = 2})
+						else
+							library.playlist[sel] = true
+							library:notification({text = "Added " .. sel .. " to playlist", time = 2})
 						end
-
-						local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
-						local targetHum = target.Character:FindFirstChildOfClass("Humanoid")
-						local myChar = lp.Character
-						local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
-
-						if not targetHRP or not targetHum then
-							library:notification({text = sel .. " not found", time = 2})
-							return
-						end
-
-						if not myHRP then
-							library:notification({text = "Your character not found", time = 2})
-							return
-						end
-
-						task.spawn(function()
-							local savedCFrame = myHRP.CFrame
-
-							-- Equip the gun (Double-Barrel SG)
-							local db = lp.Backpack:FindFirstChild("[Double-Barrel SG]") or lp.Character:FindFirstChild("[Double-Barrel SG]")
-							if not db then
-								for _, tool in ipairs(lp.Backpack:GetChildren()) do
-									if tool:IsA("Tool") and (tool.Name:lower():find("double") or tool.Name:lower():find("db")) then
-										db = tool
-										break
-									end
-								end
-							end
-							if not db then
-								for _, tool in ipairs(lp.Backpack:GetChildren()) do
-									if tool:IsA("Tool") then
-										db = tool
-										break
-									end
-								end
-							end
-
-							if db then
-								lp.Character.Humanoid:EquipTool(db)
-								task.wait(0.05)
-							else
-								library:notification({text = "No gun found to equip", time = 2})
-							end
-
-							-- teleport to them
-							myHRP.CFrame = targetHRP.CFrame + Vector3.new(0, 3, 0)
-							task.wait(0.05)
-
-							-- shoot them until knocked out (Health <= 15)
-							local shootStart = tick()
-							while targetHum and targetHum.Health > 15 and (tick() - shootStart) < 2 do
-								local Head = target.Character:FindFirstChild("SpecialParts") and target.Character.SpecialParts:FindFirstChild("Head") or target.Character:FindFirstChild("Head")
-								if Head and myHRP then
-									-- keep character next to target while shooting
-									myHRP.CFrame = targetHRP.CFrame + Vector3.new(0, 3, 0)
-
-									local args = {
-										[1] = "Shoot",
-										[2] = {
-											[1] = {
-												[1] = {Normal = Head.Position, Instance = Head, Position = Head.Position},
-												[2] = {Normal = Head.Position, Instance = Head, Position = Head.Position},
-												[3] = {Normal = Head.Position, Instance = Head, Position = Head.Position},
-												[4] = {Normal = Head.Position, Instance = Head, Position = Head.Position},
-												[5] = {Normal = Head.Position, Instance = Head, Position = Head.Position},
-											},
-											[2] = {
-												[1] = {thePart = Head, theOffset = Vector3.new()},
-												[2] = {thePart = Head, theOffset = Vector3.new()},
-												[3] = {thePart = Head, theOffset = Vector3.new()},
-												[4] = {thePart = Head, theOffset = Vector3.new()},
-												[5] = {thePart = Head, theOffset = Vector3.new()},
-											},
-											[3] = myHRP.Position,
-											[4] = myHRP.Position,
-											[5] = workspace:GetServerTimeNow(),
-										}
-									}
-									local MainEvent = rs:FindFirstChild("MainEvent")
-									if MainEvent then
-										MainEvent:FireServer(unpack(args))
-									end
-								end
-								task.wait(0.05)
-							end
-
-							-- unequip the shotgun/tool so we can grab
-							if lp.Character:FindFirstChildOfClass("Tool") then
-								lp.Character.Humanoid:UnequipTools()
-							end
-							task.wait(0.05)
-
-							-- grab them
-							local grabStart = tick()
-							local grabbed = false
-							while (tick() - grabStart) < 1.5 do
-								if target.Character:FindFirstChild("GRABBING_CONSTRAINT") or lp.Character:FindFirstChild("GRABBING_CONSTRAINT") then
-									grabbed = true
-									break
-								end
-								
-								-- position directly on top, stop velocity to ensure clean interaction
-								myHRP.CFrame = targetHRP.CFrame + Vector3.new(0, 1, 0)
-								pcall(function()
-									myHRP.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-									myHRP.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-								end)
-
-								local MainEvent = rs:FindFirstChild("MainEvent")
-								if MainEvent then
-									MainEvent:FireServer("Grabbing", false)
-								end
-								pcall(function()
-									local vim = game:GetService("VirtualInputManager")
-									vim:SendKeyEvent(true, Enum.KeyCode.G, false, game)
-									task.wait(0.02)
-									vim:SendKeyEvent(false, Enum.KeyCode.G, false, game)
-								end)
-								task.wait(0.1)
-							end
-
-							-- wait slightly for physics/weld replication before teleporting back
-							if grabbed then
-								task.wait(0.15)
-							end
-
-							-- go back
-							myHRP.CFrame = savedCFrame
-							if grabbed then
-								library:notification({text = "Brought " .. sel, time = 2})
-							else
-								library:notification({text = "Killed but failed to grab " .. sel, time = 2})
-							end
-						end)
 					end})
 				end
 			--  

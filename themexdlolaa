@@ -80,6 +80,7 @@
 		connections = {},   
 		notifications = {},
 		playerlist_data = {},
+		playlist = {},
 
 		current_tab, 
 		current_element_open, 
@@ -1818,6 +1819,64 @@
 				section:dropdown({name = "Priority", items = {"Enemy", "Priority", "Neutral", "Friendly"}, default = "Neutral", flag = "PLAYERLIST_DROPDOWN", callback = function(text)
 					library.prioritize(text)
 				end})
+
+				do -- Add to Playlist / Goto buttons
+					local btn_row = section:button_holder({flag = "PLAYERLIST_ACTIONS"})
+
+					btn_row:button({name = "Add to Playlist", callback = function()
+						local sel = library.selected_player
+						if not sel then
+							library:notification({text = "No player selected", time = 2})
+							return
+						end
+
+						local already = false
+						for i, v in ipairs(library.playlist) do
+							if v == sel then
+								table.remove(library.playlist, i)
+								already = true
+								break
+							end
+						end
+
+						if already then
+							library:notification({text = sel .. " removed from playlist", time = 2})
+						else
+							table.insert(library.playlist, sel)
+							library:notification({text = sel .. " added to playlist", time = 2})
+						end
+					end})
+
+					btn_row:button({name = "Goto", callback = function()
+						local sel = library.selected_player
+						if not sel then
+							library:notification({text = "No player selected", time = 2})
+							return
+						end
+
+						local target = players:FindFirstChild(sel)
+						if not target or not target.Character then
+							library:notification({text = sel .. " has no character", time = 2})
+							return
+						end
+
+						local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
+						local myChar = lp.Character
+						local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
+
+						if not targetHRP then
+							library:notification({text = sel .. " HRP not found", time = 2})
+							return
+						end
+
+						if myHRP then
+							myHRP.CFrame = targetHRP.CFrame + Vector3.new(0, 3, 0)
+							library:notification({text = "Teleported to " .. sel, time = 2})
+						else
+							library:notification({text = "Your character not found", time = 2})
+						end
+					end})
+				end
 			--  
 
 			return setmetatable(window, library)

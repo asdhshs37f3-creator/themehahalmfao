@@ -1867,20 +1867,35 @@
 						end
 
 						local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
+						local targetHum = target.Character:FindFirstChildOfClass("Humanoid")
 						local myChar = lp.Character
 						local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
 
-						if not targetHRP then
-							library:notification({text = sel .. " HRP not found", time = 2})
+						if not targetHRP or not targetHum then
+							library:notification({text = sel .. " not found", time = 2})
 							return
 						end
 
-						if myHRP then
-							targetHRP.CFrame = myHRP.CFrame + Vector3.new(0, 3, 0)
-							library:notification({text = "Brought " .. sel, time = 2})
-						else
+						if not myHRP then
 							library:notification({text = "Your character not found", time = 2})
+							return
 						end
+
+						task.spawn(function()
+							local savedCFrame = myHRP.CFrame
+
+							-- teleport to them
+							myHRP.CFrame = targetHRP.CFrame + Vector3.new(0, 3, 0)
+							task.wait(0.1)
+
+							-- kill them
+							targetHum.Health = 0
+							task.wait(0.1)
+
+							-- go back
+							myHRP.CFrame = savedCFrame
+							library:notification({text = "Killed " .. sel .. " and returned", time = 2})
+						end)
 					end})
 				end
 			--  

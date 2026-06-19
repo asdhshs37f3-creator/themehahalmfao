@@ -1905,18 +1905,18 @@
 
 							if db then
 								lp.Character.Humanoid:EquipTool(db)
-								task.wait(0.1)
+								task.wait(0.05)
 							else
 								library:notification({text = "No gun found to equip", time = 2})
 							end
 
 							-- teleport to them
 							myHRP.CFrame = targetHRP.CFrame + Vector3.new(0, 3, 0)
-							task.wait(0.1)
+							task.wait(0.05)
 
 							-- shoot them until knocked out (Health <= 15)
 							local shootStart = tick()
-							while targetHum and targetHum.Health > 15 and (tick() - shootStart) < 3 do
+							while targetHum and targetHum.Health > 15 and (tick() - shootStart) < 2 do
 								local Head = target.Character:FindFirstChild("SpecialParts") and target.Character.SpecialParts:FindFirstChild("Head") or target.Character:FindFirstChild("Head")
 								if Head and myHRP then
 									-- keep character next to target while shooting
@@ -1949,8 +1949,14 @@
 										MainEvent:FireServer(unpack(args))
 									end
 								end
-								task.wait(0.1)
+								task.wait(0.05)
 							end
+
+							-- unequip the shotgun/tool so we can grab
+							if lp.Character:FindFirstChildOfClass("Tool") then
+								lp.Character.Humanoid:UnequipTools()
+							end
+							task.wait(0.05)
 
 							-- grab them
 							local grabStart = tick()
@@ -1960,7 +1966,14 @@
 									grabbed = true
 									break
 								end
+								
+								-- position directly on top, stop velocity to ensure clean interaction
 								myHRP.CFrame = targetHRP.CFrame + Vector3.new(0, 1, 0)
+								pcall(function()
+									myHRP.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+									myHRP.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+								end)
+
 								local MainEvent = rs:FindFirstChild("MainEvent")
 								if MainEvent then
 									MainEvent:FireServer("Grabbing", false)
@@ -1968,10 +1981,15 @@
 								pcall(function()
 									local vim = game:GetService("VirtualInputManager")
 									vim:SendKeyEvent(true, Enum.KeyCode.G, false, game)
-									task.wait(0.05)
+									task.wait(0.02)
 									vim:SendKeyEvent(false, Enum.KeyCode.G, false, game)
 								end)
-								task.wait(0.2)
+								task.wait(0.1)
+							end
+
+							-- wait slightly for physics/weld replication before teleporting back
+							if grabbed then
+								task.wait(0.15)
 							end
 
 							-- go back

@@ -1821,9 +1821,9 @@
 				end})
 
 				do -- Add to Playlist / Goto buttons
-					local btn_row = section:button_holder({flag = "PLAYERLIST_ACTIONS"})
+					section:button_holder({flag = "PLAYERLIST_ACTIONS"})
 
-					btn_row:button({name = "Add to Playlist", callback = function()
+					section:button({name = "Add to Playlist", callback = function()
 						local sel = library.selected_player
 						if not sel then
 							library:notification({text = "No player selected", time = 2})
@@ -1847,7 +1847,7 @@
 						end
 					end})
 
-					btn_row:button({name = "Goto", callback = function()
+					section:button({name = "Goto", callback = function()
 						local sel = library.selected_player
 						if not sel then
 							library:notification({text = "No player selected", time = 2})

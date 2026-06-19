@@ -67,7 +67,7 @@
 
 -- library init
 	local library = {
-		directory = "Atlanta",
+		directory = "Inputhook",
 		folders = {
 			"/fonts",
 			"/configs",
@@ -1526,12 +1526,11 @@
 
 			-- main window
 				local main_window = library:panel({
-					name = properties and properties.name or "Atlanta | ", 
+					name = properties and properties.name or "Inputhook", 
 					size = dim2(0, 520, 0, 470),
                     position = dim2(0, (camera.ViewportSize.X / 2) - 260 - 96, 0, (camera.ViewportSize.Y / 2) - 235 - 12),
 					image = "rbxassetid://98823308062942",
 				})
-
 				local items = main_window.items
 
 				window["tab_holder"] = library:create("Frame", {
@@ -1631,11 +1630,11 @@
 					image = "rbxassetid://115194686863276",
 				})
 
-				local watermark = library:watermark({default = os.date('Atlanta |  - %b %d %Y - %H:%M:%S')})  
+				local watermark = library:watermark({default = os.date('Inputhook |  - %b %d %Y - %H:%M:%S')})  
 
 				task.spawn(function()
 					while task.wait(1) do 
-						watermark.change_text(os.date('Atlanta - Beta - %b %d %Y - %H:%M:%S'))
+						watermark.change_text(os.date('Inputhook |  - %b %d %Y - %H:%M:%S'))
 					end 
 				end) 
 

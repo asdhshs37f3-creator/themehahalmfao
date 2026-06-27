@@ -2865,7 +2865,7 @@
 						TopImage = "rbxassetid://103468666327206",
 						BottomImage = "rbxassetid://103468666327206",
 						AutomaticCanvasSize = Enum.AutomaticSize.Y,
-						ScrollBarThickness = 0,
+						ScrollBarThickness = 2,
 						Size = dim2(1, 0, 1, -20),
 						Visible = false, 
 						BackgroundTransparency = 1,
@@ -2873,7 +2873,7 @@
 						BackgroundColor3 = rgb(255, 255, 255),
 						BorderColor3 = rgb(0, 0, 0),
 						BorderSizePixel = 0,
-						ScrollBarThickness = 0,
+						ScrollBarThickness = 2,
 						CanvasSize = dim2(0, 0, 0, 0)
 					}) library:apply_theme(ScrollingFrame, "accent", "ScrollBarImageColor3") 
 					
@@ -3016,7 +3016,7 @@
 				ScrollBarImageColor3 = themes.preset.accent,
 				Active = true,
 				AutomaticCanvasSize = Enum.AutomaticSize.Y,
-				ScrollBarThickness = 0,
+				ScrollBarThickness = 2,
 				MidImage = "rbxassetid://103468666327206",
 				TopImage = "rbxassetid://103468666327206",
 				BottomImage = "rbxassetid://103468666327206",
@@ -4792,7 +4792,7 @@
 						BackgroundColor3 = themes.preset.accent,
 						CanvasSize = dim2(0, 0, 0, 0),
 						AutomaticCanvasSize = Enum.AutomaticSize.Y,
-						ScrollBarThickness = 0,
+						ScrollBarThickness = 2,
 						ScrollBarImageColor3 = themes.preset.accent
 					})
 					library:apply_theme(background, "accent", "BackgroundColor3") 
@@ -5097,7 +5097,7 @@
 					TopImage = "rbxassetid://103468666327206",
 					BottomImage = "rbxassetid://103468666327206",
 					AutomaticCanvasSize = Enum.AutomaticSize.Y,
-					ScrollBarThickness = 0,
+					ScrollBarThickness = 2,
 					BackgroundTransparency = 1,
 					Size = dim2(1, 0, 1, 0),
 					BackgroundColor3 = rgb(255, 255, 255),
@@ -5763,7 +5763,7 @@
 					TopImage = "rbxassetid://103468666327206",
 					BottomImage = "rbxassetid://103468666327206",
 					AutomaticCanvasSize = Enum.AutomaticSize.Y,
-					ScrollBarThickness = 0,
+					ScrollBarThickness = 2,
 					BackgroundTransparency = 1,
 					Size = dim2(1, 0, 1, 0),
 					BackgroundColor3 = rgb(255, 255, 255),
@@ -5993,3 +5993,24 @@
 -- 
 
 return library, themes; 
+-- Hide scrollbars
+task.spawn(function()
+    local function hide(sf)
+        sf.ScrollBarThickness = 0
+    end
+    local guis = library and library.guis
+    if guis then
+        for _, gui in ipairs(guis) do
+            for _, sf in ipairs(gui:GetDescendants()) do
+                if sf:IsA("ScrollingFrame") then
+                    hide(sf)
+                end
+            end
+            gui.DescendantAdded:Connect(function(desc)
+                if desc:IsA("ScrollingFrame") then
+                    hide(desc)
+                end
+            end)
+        end
+    end
+end)

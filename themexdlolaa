@@ -5992,26 +5992,4 @@
 	-- 
 -- 
 
--- Hide scrollbars
-task.spawn(function()
-    local function hide(sf)
-        sf.ScrollBarThickness = 0
-    end
-    local guis = library and library.guis
-    if guis then
-        for _, gui in ipairs(guis) do
-            for _, sf in ipairs(gui:GetDescendants()) do
-                if sf:IsA("ScrollingFrame") then
-                    hide(sf)
-                end
-            end
-            gui.DescendantAdded:Connect(function(desc)
-                if desc:IsA("ScrollingFrame") then
-                    hide(desc)
-                end
-            end)
-        end
-    end
-end)
-
 return library, themes;

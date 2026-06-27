@@ -5992,7 +5992,6 @@
 	-- 
 -- 
 
-return library, themes; 
 -- Hide scrollbars
 task.spawn(function()
     local function hide(sf)
@@ -6014,3 +6013,5 @@ task.spawn(function()
         end
     end
 end)
+
+return library, themes;

@@ -5975,10 +5975,17 @@
 				path.priority = text
 
 				local name = library.selected_player
-				if prev == "Whitelisted" and text ~= "Whitelisted" then
+				if text == "Whitelisted" then
+					if prev == "Whitelisted" then
+						getgenv().Whitelist[name] = nil
+						path.priority_text.Text = "---"
+						path.priority_text.TextColor3 = patterns["Neutral"]
+						path.priority = "---"
+					else
+						getgenv().Whitelist[name] = true
+					end
+				else
 					getgenv().Whitelist[name] = nil
-				elseif text == "Whitelisted" then
-					getgenv().Whitelist[name] = true
 				end
 			end 
 

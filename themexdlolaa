@@ -1818,33 +1818,12 @@
 				local playerlist = section:playerlist({})
 				if not getgenv().Whitelist then getgenv().Whitelist = {} end
 
-			section:dropdown({name = "Priority", items = {"Enemy", "Priority", "Neutral", "Friendly"}, default = "Neutral", flag = "PLAYERLIST_DROPDOWN", callback = function(text)
+			section:dropdown({name = "Priority", items = {"Enemy", "Priority", "Neutral", "Friendly", "Whitelisted"}, default = "Neutral", flag = "PLAYERLIST_DROPDOWN", callback = function(text)
 					library.prioritize(text)
 				end})
 
 				do
 					section:button_holder({flag = "PLAYERLIST_ACTIONS"})
-
-					section:button({name = "Whitelist", callback = function()
-						local sel = library.selected_player
-						if not sel then
-							library:notification({text = "No player selected", time = 2})
-							return
-						end
-						local path = library.playerlist_data[sel]
-						if not path then return end
-						if path.priority == "Whitelisted" then
-							getgenv().Whitelist[sel] = nil
-							path.priority_text.Text = "Neutral"
-							path.priority_text.TextColor3 = patterns["Neutral"]
-							path.priority = "Neutral"
-						else
-							getgenv().Whitelist[sel] = true
-							path.priority_text.Text = "Whitelisted"
-							path.priority_text.TextColor3 = patterns["Whitelisted"]
-							path.priority = "Whitelisted"
-						end
-					end})
 
 					section:button({name = "Goto", callback = function()
 						local sel = library.selected_player
@@ -5990,15 +5969,25 @@
 
 				local path = library.playerlist_data[library.selected_player]
 				if not path then return end
-				local prev = path.priority
+
+				local name = library.selected_player
+				if text == "Whitelisted" then
+					if getgenv().Whitelist[name] then
+						getgenv().Whitelist[name] = nil
+						path.priority_text.Text = "Neutral"
+						path.priority_text.TextColor3 = patterns["Neutral"]
+						path.priority = "Neutral"
+						return
+					else
+						getgenv().Whitelist[name] = true
+					end
+				else
+					getgenv().Whitelist[name] = nil
+				end
+
 				path.priority_text.Text = text
 				path.priority_text.TextColor3 = patterns[text]
 				path.priority = text
-
-				local name = library.selected_player
-				if text ~= "Whitelisted" then
-					getgenv().Whitelist[name] = nil
-				end
 			end 
 
 			function library.get_priority(player) 

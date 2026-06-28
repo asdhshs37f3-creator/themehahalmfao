@@ -5978,9 +5978,9 @@
 				if text == "Whitelisted" then
 					if prev == "Whitelisted" then
 						getgenv().Whitelist[name] = nil
-						path.priority_text.Text = "---"
+						path.priority_text.Text = "Neutral"
 						path.priority_text.TextColor3 = patterns["Neutral"]
-						path.priority = "---"
+						path.priority = "Neutral"
 					else
 						getgenv().Whitelist[name] = true
 					end

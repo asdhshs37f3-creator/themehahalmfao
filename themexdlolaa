@@ -1800,18 +1800,6 @@
 				
 				local column = setmetatable(items, library):column() 
 				window.esp_section = column:section({name = "Main"})
-				window.esp_section:dropdown({name = "Name Side", flag = "ESP_NameSide", items = {"Top Left", "Top Center", "Top Right"}, default = "Top Center", callback = function()
-					if window.__espPreview then window.__espPreview:update_alignment() end
-				end})
-				window.esp_section:dropdown({name = "Health Side", flag = "ESP_HealthSide", items = {"Left", "Right"}, default = "Left", callback = function()
-					if window.__espPreview then window.__espPreview:update_alignment() end
-				end})
-				window.esp_section:dropdown({name = "Dist Side", flag = "ESP_DistSide", items = {"Bottom Left", "Bottom Center", "Bottom Right"}, default = "Bottom Center", callback = function()
-					if window.__espPreview then window.__espPreview:update_alignment() end
-				end})
-				window.esp_section:dropdown({name = "Weapon Side", flag = "ESP_WeaponSide", items = {"Bottom Left", "Bottom Center", "Bottom Right"}, default = "Bottom Center", callback = function()
-					if window.__espPreview then window.__espPreview:update_alignment() end
-				end})
 			--  
 
 			-- playerlist 
@@ -2421,66 +2409,6 @@
 					cfg.change_health()
 				end 
 			end)
-
-			cfg.alignment = {}
-			function cfg.update_alignment()
-				local ns = flags["ESP_NameSide"] or "Top Center"
-				local hs = flags["ESP_HealthSide"] or "Left"
-				local ds = flags["ESP_DistSide"] or "Bottom Center"
-				local ws = flags["ESP_WeaponSide"] or "Bottom Center"
-				cfg.alignment.name = ns
-				cfg.alignment.health = hs
-				cfg.alignment.distance = ds
-				cfg.alignment.weapon = ws
-
-				local obj = objects.name
-				if obj then
-					if ns == "Top Left" then
-						obj.TextXAlignment = Enum.TextXAlignment.Left
-					elseif ns == "Top Right" then
-						obj.TextXAlignment = Enum.TextXAlignment.Right
-					else
-						obj.TextXAlignment = Enum.TextXAlignment.Center
-					end
-				end
-
-				local hb = objects.healthbar_holder
-				if hb then
-					if hs == "Right" then
-						hb.AnchorPoint = vec2(0, 0)
-						hb.Position = dim2(1, 5, 0, 0)
-					else
-						hb.AnchorPoint = vec2(1, 0)
-						hb.Position = dim2(0, -5, 0, 0)
-					end
-				end
-
-				local dist = objects.distance
-				if dist then
-					if ds == "Bottom Left" then
-						dist.TextXAlignment = Enum.TextXAlignment.Left
-					elseif ds == "Bottom Right" then
-						dist.TextXAlignment = Enum.TextXAlignment.Right
-					else
-						dist.TextXAlignment = Enum.TextXAlignment.Center
-					end
-				end
-
-				local wep = objects.weapon
-				if wep then
-					if ws == "Bottom Left" then
-						wep.TextXAlignment = Enum.TextXAlignment.Left
-					elseif ws == "Bottom Right" then
-						wep.TextXAlignment = Enum.TextXAlignment.Right
-					else
-						wep.TextXAlignment = Enum.TextXAlignment.Center
-					end
-				end
-			end
-
-			cfg.refresh_elements() 
-			cfg.update_alignment()
-			window.__espPreview = cfg
 
 			return setmetatable(cfg, library)
 		end

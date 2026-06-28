@@ -1820,6 +1820,32 @@
 					library.prioritize(text)
 				end})
 
+				if not getgenv().Whitelist then
+					getgenv().Whitelist = {}
+					getgenv().WhitelistEnabled = false
+				end
+
+				section:toggle({name = "Whitelist", flag = "WhitelistToggle", default = false, callback = function(value)
+					getgenv().WhitelistEnabled = value
+				end})
+
+				section:button({name = "Toggle Whitelist Player", callback = function()
+					local sel = library.selected_player
+					if not sel then
+						library:notification({text = "No player selected", time = 2})
+						return
+					end
+					if getgenv().Whitelist[sel] then
+						getgenv().Whitelist[sel] = nil
+						library:notification({text = "Unwhitelisted " .. sel, time = 2})
+					else
+						getgenv().Whitelist[sel] = true
+						local count = 0
+						for _ in pairs(getgenv().Whitelist) do count = count + 1 end
+						library:notification({text = "Whitelisted " .. sel .. " (" .. count .. ")", time = 2})
+					end
+				end})
+
 				do -- Goto / Spectate buttons
 					section:button_holder({flag = "PLAYERLIST_ACTIONS"})
 
@@ -5992,4 +6018,28 @@
 	-- 
 -- 
 
+
+-- Hide scrollbars
+task.spawn(function()
+    local function hide(sf)
+        sf.ScrollBarThickness = 0
+    end
+    local guis = library and library.guis
+    if guis then
+        for _, gui in ipairs(guis) do
+            for _, sf in ipairs(gui:GetDescendants()) do
+                if sf:IsA("ScrollingFrame") then
+                    hide(sf)
+                end
+            end
+            gui.DescendantAdded:Connect(function(desc)
+                if desc:IsA("ScrollingFrame") then
+                    hide(desc)
+                end
+            end)
+        end
+    end
+end)
+
 return library, themes;
+

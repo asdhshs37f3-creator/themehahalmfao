@@ -360,7 +360,7 @@
 					end 
 
 					if frame.Parent:IsA("ScreenGui") and frame.Parent.DisplayOrder ~= 999999 then 
-						library.display_orders += 1 -- shit code
+						library.display_orders = library.display_orders + 1
 						frame.Parent.DisplayOrder = library.display_orders
 					end   
 				end
@@ -1243,10 +1243,10 @@
 				window.opened = bool 
 				
 				if bool then 
-					for _,gui in opened do 
+					for _,gui in ipairs(opened) do 
 						gui.Enabled = true 
-						opened = {}
 					end 
+					opened = {}
 				else
 					for _,gui in library.guis do 
 						if gui.Enabled then 
@@ -1816,37 +1816,13 @@
 				local column = setmetatable(items, library):column() 
 				local section = column:section({name = "Playerlist"})
 				local playerlist = section:playerlist({})
-				section:dropdown({name = "Priority", items = {"Enemy", "Priority", "Neutral", "Friendly"}, default = "Neutral", flag = "PLAYERLIST_DROPDOWN", callback = function(text)
+				if not getgenv().Whitelist then getgenv().Whitelist = {} end
+
+			section:dropdown({name = "Priority", items = {"Enemy", "Priority", "Neutral", "Friendly", "Whitelisted"}, default = "Neutral", flag = "PLAYERLIST_DROPDOWN", callback = function(text)
 					library.prioritize(text)
 				end})
 
-				if not getgenv().Whitelist then
-					getgenv().Whitelist = {}
-					getgenv().WhitelistEnabled = false
-				end
-
-				section:toggle({name = "Whitelist", flag = "WhitelistToggle", default = false, callback = function(value)
-					getgenv().WhitelistEnabled = value
-				end})
-
-				section:button({name = "Toggle Whitelist Player", callback = function()
-					local sel = library.selected_player
-					if not sel then
-						library:notification({text = "No player selected", time = 2})
-						return
-					end
-					if getgenv().Whitelist[sel] then
-						getgenv().Whitelist[sel] = nil
-						library:notification({text = "Unwhitelisted " .. sel, time = 2})
-					else
-						getgenv().Whitelist[sel] = true
-						local count = 0
-						for _ in pairs(getgenv().Whitelist) do count = count + 1 end
-						library:notification({text = "Whitelisted " .. sel .. " (" .. count .. ")", time = 2})
-					end
-				end})
-
-				do -- Goto / Spectate buttons
+				do
 					section:button_holder({flag = "PLAYERLIST_ACTIONS"})
 
 					section:button({name = "Goto", callback = function()
@@ -2058,7 +2034,7 @@
 
 				library:connection(run.RenderStepped, function()
 					task.wait()
-					cfg.rotation += 0.5
+					cfg.rotation = cfg.rotation + 0.5
 					character:SetPrimaryPartCFrame(cfr(Vector3.new(0, 1, -6)) * angle(0, math.rad(cfg.rotation), 0))
 				end)
 			end 
@@ -5063,8 +5039,8 @@
 					Size = dim2(1, -27, 1, cfg.scale),
 					BorderSizePixel = 0,
 					BackgroundColor3 = themes.preset.outline
-				}) library:apply_theme(main_holder, "outline", "BackgroundColor3") 
-				
+				}) library:apply_theme(list, "outline", "BackgroundColor3") 
+
 				local inline = library:create("Frame", {
 					Parent = list,
 					Name = "",
@@ -5671,7 +5647,8 @@
 				["Priority"] = rgb(255, 255, 0),
 				["Enemy"] = rgb(255, 0, 0),
 				["Neutral"] = themes.preset.text,
-				["Friendly"] = rgb(0, 255, 255)
+				["Friendly"] = rgb(0, 255, 255),
+				["Whitelisted"] = rgb(0, 255, 0)
 			}
 
 			-- elements 
@@ -5892,7 +5869,7 @@
 					BackgroundColor3 = rgb(255, 255, 255)
 				})
 
-				local Frame = library:create("Frame", {
+				local sepFrame = library:create("Frame", {
 					Parent = priority_text,
 					Name = "",
 					Position = dim2(0, -10, 0, 0),
@@ -5900,7 +5877,7 @@
 					Size = dim2(0, 1, 0, 12),
 					BorderSizePixel = 0,
 					BackgroundColor3 = themes.preset.outline
-				}) library:apply_theme(main_holder, "outline", "BackgroundColor3") 
+				}) library:apply_theme(sepFrame, "outline", "BackgroundColor3") 
 				
 				local UIListLayout = library:create("UIListLayout", {
 					Parent = TextButton,
@@ -5925,7 +5902,7 @@
 					Size = dim2(1, 0, 0, 1),
 					BorderSizePixel = 0,
 					BackgroundColor3 = themes.preset.outline
-				}) library:apply_theme(main_holder, "outline", "BackgroundColor3") 
+				}) library:apply_theme(line, "outline", "BackgroundColor3") 
 
 				path.instance = TextButton 
 				path.line = line 
@@ -5934,7 +5911,7 @@
 				-- library.selected_player = players[tostring(player)]
 				
 				TextButton.MouseButton1Click:Connect(function()
-					if player_name == lp.Name then 
+					if player_name.Text == lp.Name then 
 						return 
 					end 
 
@@ -5973,10 +5950,16 @@
 			end 
 
 			function cfg.remove_player(player) 
-				local path = library.playerlist_data[tostring(player)]
-				path.instance:Destroy() 
-				path.line:Destroy() 
-				path = nil 
+				local pName = tostring(player)
+				local path = library.playerlist_data[pName]
+				if path then
+					path.instance:Destroy() 
+					path.line:Destroy() 
+				end
+				library.playerlist_data[pName] = nil
+				if getgenv().Whitelist then
+					getgenv().Whitelist[pName] = nil
+				end
 			end 
 
 			function library.prioritize(text) 
@@ -5985,9 +5968,18 @@
 				end 
 
 				local path = library.playerlist_data[library.selected_player]
+				if not path then return end
+				local prev = path.priority
 				path.priority_text.Text = text
 				path.priority_text.TextColor3 = patterns[text]
 				path.priority = text
+
+				local name = library.selected_player
+				if prev == "Whitelisted" and text ~= "Whitelisted" then
+					getgenv().Whitelist[name] = nil
+				elseif text == "Whitelisted" then
+					getgenv().Whitelist[name] = true
+				end
 			end 
 
 			function library.get_priority(player) 

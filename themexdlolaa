@@ -1818,7 +1818,7 @@
 				local playerlist = section:playerlist({})
 				if not getgenv().Whitelist then getgenv().Whitelist = {} end
 
-			section:dropdown({name = "Priority", items = {"Enemy", "Priority", "Neutral", "Friendly", "Whitelisted"}, default = "Neutral", flag = "PLAYERLIST_DROPDOWN", callback = function(text)
+			section:dropdown({name = "Priority", items = {"Enemy", "Priority", "Neutral", "Friendly", "Whitelist"}, default = "Neutral", flag = "PLAYERLIST_DROPDOWN", callback = function(text)
 					library.prioritize(text)
 				end})
 

@@ -1789,7 +1789,7 @@
 					
 			-- esp preview
 				local holder = library:panel({
-					name = "ESP Preview", 
+					name = "Preview", 
 					anchor_point = vec2(0, 0),
 					size = dim2(0, 300, 0, 325),
 					position = dim2(0, style.items.main_holder.AbsolutePosition.X, 0, style.items.main_holder.AbsolutePosition.Y + style.items.main_holder.AbsoluteSize.Y + 2),
@@ -1818,7 +1818,7 @@
 				local playerlist = section:playerlist({})
 				if not getgenv().Whitelist then getgenv().Whitelist = {} end
 
-			section:dropdown({name = "Priority", items = {"Enemy", "Priority", "Neutral", "Friendly", "Whitelisted"}, default = "Neutral", flag = "PLAYERLIST_DROPDOWN", callback = function(text)
+			section:dropdown({name = "Priority", items = {"Enemy", "Priority", "Neutral", "Friendly", "Whitelist"}, default = "Neutral", flag = "PLAYERLIST_DROPDOWN", callback = function(text)
 					library.prioritize(text)
 				end})
 
@@ -5971,7 +5971,7 @@
 				if not path then return end
 
 				local name = library.selected_player
-				if text == "Whitelisted" then
+				if text == "Whitelist" then
 					if getgenv().Whitelist[name] then
 						getgenv().Whitelist[name] = nil
 						path.priority_text.Text = "Neutral"
@@ -5981,13 +5981,15 @@
 					else
 						getgenv().Whitelist[name] = true
 					end
+					path.priority_text.Text = "Whitelisted"
+					path.priority_text.TextColor3 = patterns["Whitelisted"]
+					path.priority = "Whitelisted"
 				else
 					getgenv().Whitelist[name] = nil
+					path.priority_text.Text = text
+					path.priority_text.TextColor3 = patterns[text]
+					path.priority = text
 				end
-
-				path.priority_text.Text = text
-				path.priority_text.TextColor3 = patterns[text]
-				path.priority = text
 			end 
 
 			function library.get_priority(player) 

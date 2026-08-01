@@ -6043,7 +6043,9 @@ task.spawn(function()
     end
 end)
 
-
+-- =====================================================
+--  Loader (shows first when resolver.lua is executed)
+-- =====================================================
 local genv = (getgenv and getgenv()) or _G
 
 if not genv._GLITTERHOOK_MAIN_RUNNING and not genv._GLITTERHOOK_LOADER_CREATED then
@@ -6054,70 +6056,78 @@ if not genv._GLITTERHOOK_MAIN_RUNNING and not genv._GLITTERHOOK_LOADER_CREATED t
 
     local MAIN_SCRIPT_URL = "https://raw.githubusercontent.com/asdhshs37f3-creator/themehahalmfao/refs/heads/main/main.lua"
 
-    local Players = game:GetService("Players")
-    local Market = game:GetService("MarketplaceService")
-    local lp = Players.LocalPlayer
+    local okLoad, errLoad = pcall(function()
+        local Players = game:GetService("Players")
+        local Market = game:GetService("MarketplaceService")
+        local lp = Players.LocalPlayer
 
-    local loaderWindow = library:window({name = "glitterhook loader"})
-    local loaderTab = loaderWindow:tab({name = "Loader"})
-    local loaderCol = loaderTab:column()
+        local loaderWindow = library:window({name = "glitterhook loader"})
+        local loaderTab = loaderWindow:tab({name = "Loader"})
+        local loaderCol = loaderTab:column()
 
-    local info = loaderCol:section({name = "Information"})
-    info:label({name = "Script: glitterhook v1.0.0"})
-    local okName, gameName = pcall(function() return Market:GetProductInfo(game.PlaceId).Name end)
-    info:label({name = "Game: " .. (okName and gameName or tostring(game.Name))})
-    info:label({name = "Player: " .. (lp and lp.DisplayName or "?") .. " [" .. (lp and lp.Name or "?") .. "]"})
-    info:label({name = "Job ID: " .. game.JobId})
+        local info = loaderCol:section({name = "Information"})
+        info:label({name = "Script: glitterhook v1.0.0"})
+        local okName, gameName = pcall(function() return Market:GetProductInfo(game.PlaceId).Name end)
+        info:label({name = "Game: " .. (okName and gameName or tostring(game.Name))})
+        info:label({name = "Player: " .. (lp and lp.DisplayName or "?") .. " [" .. (lp and lp.Name or "?") .. "]"})
+        info:label({name = "Job ID: " .. game.JobId})
 
-    local launch = loaderCol:section({name = "Launch"})
-    local status = launch:label({name = "Status: Ready"})
+        local launch = loaderCol:section({name = "Launch"})
+        local status = launch:label({name = "Status: Ready"})
 
-    local function get_main_source()
-        local okSrc, src = pcall(readfile, "main.lua")
-        if okSrc and type(src) == "string" and #src > 0 then
-            return src
-        end
-
-        local okNet, net = pcall(function()
-            return game:HttpGet(MAIN_SCRIPT_URL)
-        end)
-        if not okNet or type(net) ~= "string" or #net == 0 then
-            error("main.lua not found locally and download failed: " .. tostring(net))
-        end
-
-        pcall(writefile, "main.lua", net)
-        return net
-    end
-
-    launch:button({name = "Load Script", callback = function()
-        if genv._GLITTERHOOK_MAIN_LOADED then
-            library:notification({ text = "Script is already loaded", time = 2 })
-            return
-        end
-
-        task.spawn(function()
-            status.set("Status: Loading script...")
-            loaderWindow.set_menu_visibility(false)
-
-            local okMain, errMain = pcall(function()
-                local src = get_main_source()
-                local fn = loadstring(src)
-                if not fn then
-                    error("main.lua failed to compile")
-                end
-                return fn()
-            end)
-
-            if not okMain then
-                loaderWindow.set_menu_visibility(true)
-                status.set("Status: Failed - " .. tostring(errMain))
-                library:notification({ text = "Load failed: " .. tostring(errMain), time = 4 })
-            else
-                genv._GLITTERHOOK_MAIN_LOADED = true
-                status.set("Status: Loaded")
+        local function get_main_source()
+            local okSrc, src = pcall(readfile, "main.lua")
+            if okSrc and type(src) == "string" and #src > 0 then
+                return src
             end
+
+            local okNet, net = pcall(function()
+                return game:HttpGet(MAIN_SCRIPT_URL)
+            end)
+            if not okNet or type(net) ~= "string" or #net == 0 then
+                error("main.lua not found locally and download failed - set MAIN_SCRIPT_URL in resolver.lua: " .. tostring(net))
+            end
+
+            pcall(writefile, "main.lua", net)
+            return net
+        end
+
+        launch:button({name = "Load Script", callback = function()
+            if genv._GLITTERHOOK_MAIN_LOADED then
+                library:notification({ text = "Script is already loaded", time = 2 })
+                return
+            end
+
+            task.spawn(function()
+                status.set("Status: Loading script...")
+                loaderWindow.set_menu_visibility(false)
+
+                local okMain, errMain = pcall(function()
+                    local src = get_main_source()
+                    local fn = loadstring(src)
+                    if not fn then
+                        error("main.lua failed to compile")
+                    end
+                    return fn()
+                end)
+
+                if not okMain then
+                    loaderWindow.set_menu_visibility(true)
+                    status.set("Status: Failed - " .. tostring(errMain))
+                    library:notification({ text = "Load failed: " .. tostring(errMain), time = 5 })
+                else
+                    genv._GLITTERHOOK_MAIN_LOADED = true
+                    status.set("Status: Loaded")
+                end
+            end)
+        end})
+    end)
+
+    if not okLoad then
+        pcall(function()
+            library:notification({ text = "Loader error: " .. tostring(errLoad), time = 6 })
         end)
-    end})
+    end
 end
 
 return library, themes;

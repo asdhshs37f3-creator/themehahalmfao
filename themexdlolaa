@@ -1276,7 +1276,6 @@
 				end
 			end 
 
-			if not properties.minimal then
 			-- dock init
 				dock_outline = library:create("Frame", {
 					Parent = sgui,
@@ -1524,7 +1523,6 @@
 					PaddingBottom = dim(0, 4),
 					PaddingLeft = dim(0, 5)
 				})
-			end
 			--  
 
 			-- main window

@@ -6052,6 +6052,8 @@ if not genv._GLITTERHOOK_MAIN_RUNNING and not genv._GLITTERHOOK_LOADER_CREATED t
     genv.InputhookLibrary = library
     genv.InputhookThemes = themes
 
+    local MAIN_SCRIPT_URL = "https://raw.githubusercontent.com/asdhshs37f3-creator/themehahalmfao/refs/heads/main/main.lua"
+
     local Players = game:GetService("Players")
     local Market = game:GetService("MarketplaceService")
     local lp = Players.LocalPlayer
@@ -6070,6 +6072,23 @@ if not genv._GLITTERHOOK_MAIN_RUNNING and not genv._GLITTERHOOK_LOADER_CREATED t
     local launch = loaderCol:section({name = "Launch"})
     local status = launch:label({name = "Status: Ready"})
 
+    local function get_main_source()
+        local okSrc, src = pcall(readfile, "main.lua")
+        if okSrc and type(src) == "string" and #src > 0 then
+            return src
+        end
+
+        local okNet, net = pcall(function()
+            return game:HttpGet(MAIN_SCRIPT_URL)
+        end)
+        if not okNet or type(net) ~= "string" or #net == 0 then
+            error("main.lua not found locally and download failed: " .. tostring(net))
+        end
+
+        pcall(writefile, "main.lua", net)
+        return net
+    end
+
     launch:button({name = "Load Script", callback = function()
         if genv._GLITTERHOOK_MAIN_LOADED then
             library:notification({ text = "Script is already loaded", time = 2 })
@@ -6081,10 +6100,7 @@ if not genv._GLITTERHOOK_MAIN_RUNNING and not genv._GLITTERHOOK_LOADER_CREATED t
             loaderWindow.set_menu_visibility(false)
 
             local okMain, errMain = pcall(function()
-                local okSrc, src = pcall(readfile, "main.lua")
-                if not okSrc or type(src) ~= "string" or #src == 0 then
-                    error("main.lua not found (readfile failed)")
-                end
+                local src = get_main_source()
                 local fn = loadstring(src)
                 if not fn then
                     error("main.lua failed to compile")

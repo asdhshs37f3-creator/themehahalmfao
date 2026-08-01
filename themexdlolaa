@@ -1258,7 +1258,7 @@
 
 				library:tween(blur, {Size = bool and (flags["Blur Size"] or 15) or 0})
 
-				dock_outline.Visible = bool;
+				if dock_outline then dock_outline.Visible = bool; end
 
 				sgui.Enabled = true
 				notif_holder.Enabled = true
@@ -1276,6 +1276,7 @@
 				end
 			end 
 
+			if not properties.minimal then
 			-- dock init
 				dock_outline = library:create("Frame", {
 					Parent = sgui,
@@ -1523,6 +1524,7 @@
 					PaddingBottom = dim(0, 4),
 					PaddingLeft = dim(0, 5)
 				})
+			end
 			--  
 
 			-- main window
@@ -6056,7 +6058,7 @@ if not genv._GLITTERHOOK_MAIN_RUNNING and not genv._GLITTERHOOK_LOADER_CREATED t
     genv.InputhookLibrary = library
     genv.InputhookThemes = themes
 
-    local MAIN_SCRIPT_URL = "https://raw.githubusercontent.com/asdhshs37f3-creator/themehahalmfao/refs/heads/main/main.lua"
+    local MAIN_SCRIPT_URL = "https://raw.githubusercontent.com/asdhshs37f3-creator/themehahalmfao/refs/heads/main/main.lua?t=" .. tostring(os.clock())
 
     local okLoad, errLoad = pcall(function()
         local Players = game:GetService("Players")
@@ -6065,6 +6067,8 @@ if not genv._GLITTERHOOK_MAIN_RUNNING and not genv._GLITTERHOOK_LOADER_CREATED t
 
         local loaderWindow = library:window({name = "glitterhook loader", minimal = true})
         local loaderTab = loaderWindow:tab({name = "Loader"})
+        loaderTab.open_tab()
+        loaderWindow.tab_holder.Visible = false
         local loaderCol = loaderTab:column()
 
         local info = loaderCol:section({name = "Information"})

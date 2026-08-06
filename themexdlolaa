@@ -1815,8 +1815,8 @@
 				local extra_column = setmetatable(extra_items, library):column() 
 				local extra_section = extra_column:section({name = "Audio Player"})
 
-				local audio_path = "C:\\Users\\breac\\Downloads\\error\\you will never truly know me.mp3"
-				local audio_track = "you will never truly know me"
+				local audio_path = "91881958634580"
+				local audio_track = "ID: 91881958634580"
 				local audio_sound = nil
 				local audio_volume = 1
 				local audio_pitch = 1
@@ -1830,6 +1830,16 @@
 				local audio_vis_disc = nil
 				local audio_vis_pp = nil
 				local audio_vis_bars = {}
+				local audio_vis_pp_pause = nil
+				local audio_vis_time = nil
+				local audio_vis_prog = nil
+
+				local function fmt_time(secs)
+					secs = math.max(0, math.floor(tonumber(secs) or 0))
+					local m = math.floor(secs / 60)
+					local s = secs % 60
+					return string.format("%02d:%02d", m, s)
+				end
 
 				local function set_audio_status(text)
 					if audio_status and audio_status.set then
@@ -1840,7 +1850,7 @@
 						audio_vis_status.TextColor3 = audio_is_playing and rgb(80, 230, 120) or rgb(220, 190, 90)
 					end
 					if audio_vis_track then
-						audio_vis_track.Text = audio_track
+						audio_vis_track.Text = "♪ " .. audio_track
 					end
 				end
 
@@ -1927,6 +1937,9 @@
 						if audio_vis_gui then
 							audio_vis_gui.Enabled = true
 						end
+						if audio_vis_pp_pause then
+							audio_vis_pp_pause.Visible = true
+						end
 					elseif playfile then
 						pcall(playfile, audio_path)
 						audio_is_playing = true
@@ -1934,6 +1947,9 @@
 						set_audio_status("Playing (system): " .. audio_track)
 						if audio_vis_gui then
 							audio_vis_gui.Enabled = true
+						end
+						if audio_vis_pp_pause then
+							audio_vis_pp_pause.Visible = true
 						end
 					else
 						set_audio_status("Error: could not load audio file")
@@ -1948,6 +1964,9 @@
 					audio_is_playing = false
 					audio_is_paused = true
 					set_audio_status("Paused: " .. audio_track)
+					if audio_vis_pp_pause then
+						audio_vis_pp_pause.Visible = false
+					end
 				end
 
 				local function stop_audio()
@@ -1960,6 +1979,9 @@
 					set_audio_status("Stopped: " .. audio_track)
 					if audio_vis_gui then
 						audio_vis_gui.Enabled = false
+					end
+					if audio_vis_pp_pause then
+						audio_vis_pp_pause.Visible = false
 					end
 				end
 
@@ -2127,6 +2149,29 @@
 				audio_vis_status.Position = dim2(0, 0, 0, 24)
 				audio_vis_status.TextXAlignment = Enum.TextXAlignment.Left
 				audio_vis_status.ZIndex = 4
+				audio_vis_time = Instance.new("TextLabel", av_info)
+				audio_vis_time.Text = "00:00 / 00:00"
+				audio_vis_time.Font = Enum.Font.SourceSans
+				audio_vis_time.TextSize = 12
+				audio_vis_time.TextColor3 = rgb(150, 145, 190)
+				audio_vis_time.BackgroundTransparency = 1
+				audio_vis_time.Size = dim2(1, 0, 0, 16)
+				audio_vis_time.Position = dim2(0, 0, 0, 46)
+				audio_vis_time.TextXAlignment = Enum.TextXAlignment.Left
+				audio_vis_time.ZIndex = 4
+				local av_prog_bg = Instance.new("Frame", av_info)
+				av_prog_bg.BackgroundColor3 = rgb(30, 24, 58)
+				av_prog_bg.BorderSizePixel = 0
+				av_prog_bg.Position = dim2(0, 0, 0, 64)
+				av_prog_bg.Size = dim2(1, 0, 0, 4)
+				av_prog_bg.ZIndex = 4
+				Instance.new("UICorner", av_prog_bg).CornerRadius = UDim.new(0, 2)
+				audio_vis_prog = Instance.new("Frame", av_prog_bg)
+				audio_vis_prog.BackgroundColor3 = av_accent
+				audio_vis_prog.BorderSizePixel = 0
+				audio_vis_prog.Size = dim2(0, 0, 1, 0)
+				audio_vis_prog.ZIndex = 5
+				Instance.new("UICorner", audio_vis_prog).CornerRadius = UDim.new(0, 2)
 
 				local av_controls = Instance.new("Frame", av_main)
 				av_controls.BackgroundTransparency = 1
@@ -2157,44 +2202,44 @@
 						audio_sound.TimePosition = 0
 					end
 				end)
-				audio_vis_pp = Instance.new("TextButton", av_controls)
-				audio_vis_pp.Text = "▶"
-				audio_vis_pp.Font = Enum.Font.SourceSansBold
-				audio_vis_pp.TextSize = 24
-				audio_vis_pp.TextColor3 = rgb(255, 255, 255)
-				audio_vis_pp.BackgroundColor3 = rgb(255, 255, 255)
+				audio_vis_pp = Instance.new("ImageButton", av_controls)
+				audio_vis_pp.Image = "rbxassetid://138700425976830"
+				audio_vis_pp.ScaleType = Enum.ScaleType.Fit
+				audio_vis_pp.BackgroundTransparency = 1
 				audio_vis_pp.BorderSizePixel = 0
 				audio_vis_pp.Position = dim2(0, 54, 0, -2)
 				audio_vis_pp.Size = dim2(0, 54, 0, 52)
 				audio_vis_pp.ZIndex = 4
-				Instance.new("UICorner", audio_vis_pp).CornerRadius = UDim.new(0, 10)
-				local av_ppg = Instance.new("UIGradient", audio_vis_pp)
-				av_ppg.Color = ColorSequence.new{
-					ColorSequenceKeypoint.new(0, av_accent),
-					ColorSequenceKeypoint.new(1, av_accent:Lerp(rgb(65, 125, 248), 0.4))
-				}
-				av_ppg.Rotation = 45
+				audio_vis_pp_pause = Instance.new("TextLabel", audio_vis_pp)
+				audio_vis_pp_pause.Text = "⏸"
+				audio_vis_pp_pause.Font = Enum.Font.SourceSansBold
+				audio_vis_pp_pause.TextSize = 24
+				audio_vis_pp_pause.TextColor3 = rgb(255, 255, 255)
+				audio_vis_pp_pause.BackgroundTransparency = 1
+				audio_vis_pp_pause.Size = dim2(1, 0, 1, 0)
+				audio_vis_pp_pause.Visible = false
+				audio_vis_pp_pause.ZIndex = 5
 				audio_vis_pp.MouseButton1Click:Connect(function()
 					if audio_is_playing then
 						pause_audio()
-						audio_vis_pp.Text = "▶"
+						audio_vis_pp_pause.Visible = false
 					elseif audio_is_paused then
 						if audio_sound and audio_sound.Parent then
 							audio_sound:Resume()
 						end
 						audio_is_playing = true
 						audio_is_paused = false
-						audio_vis_pp.Text = "⏸"
+						audio_vis_pp_pause.Visible = true
 						set_audio_status("Playing: " .. audio_track)
 					else
 						play_audio()
-						audio_vis_pp.Text = "⏸"
+						audio_vis_pp_pause.Visible = true
 					end
 				end)
 				av_icon_btn("⏹", 116, function()
 					stop_audio()
-					if audio_vis_pp then
-						audio_vis_pp.Text = "▶"
+					if audio_vis_pp_pause then
+						audio_vis_pp_pause.Visible = false
 					end
 				end)
 				local av_loop
@@ -2240,18 +2285,15 @@
 				av_input_box.TextXAlignment = Enum.TextXAlignment.Left
 				av_input_box.ClearTextOnFocus = false
 				av_input_box.ZIndex = 4
-				local av_load = Instance.new("TextButton", av_input)
-				av_load.Text = "▶ PLAY"
-				av_load.Font = Enum.Font.SourceSansBold
-				av_load.TextSize = 11
-				av_load.TextColor3 = rgb(255, 255, 255)
-				av_load.BackgroundColor3 = av_accent
+				local av_load = Instance.new("ImageButton", av_input)
+				av_load.Image = "rbxassetid://138700425976830"
+				av_load.ScaleType = Enum.ScaleType.Fit
+				av_load.BackgroundTransparency = 1
 				av_load.BorderSizePixel = 0
 				av_load.AnchorPoint = vec2(1, 0.5)
 				av_load.Position = dim2(1, -4, 0.5, 0)
 				av_load.Size = dim2(0, 68, 0, 24)
 				av_load.ZIndex = 4
-				Instance.new("UICorner", av_load).CornerRadius = UDim.new(0, 6)
 				local function av_play_source()
 					local src = av_input_box.Text
 					if src and src ~= "" then
@@ -2267,8 +2309,8 @@
 						audio_is_paused = false
 					end
 					play_audio()
-					if audio_vis_pp then
-						audio_vis_pp.Text = "⏸"
+					if audio_vis_pp_pause then
+						audio_vis_pp_pause.Visible = true
 					end
 				end
 				av_input_box.FocusLost:Connect(function(enter)
@@ -2330,6 +2372,18 @@
 								audio_vis_disc.TextSize = math.floor(50 * pulse)
 							else
 								audio_vis_disc.TextSize = 50
+							end
+						end
+						if audio_vis_time and audio_vis_prog then
+							local now = active and (sound.TimePosition or 0) or 0
+							local total = sound and (sound.TimeLength or 0) or 0
+							if audio_vis_time and (audio_is_playing or audio_is_paused) then
+								audio_vis_time.Text = fmt_time(now) .. " / " .. fmt_time(total)
+							elseif audio_vis_time then
+								audio_vis_time.Text = "00:00 / " .. fmt_time(total)
+							end
+							if total > 0 then
+								audio_vis_prog.Size = dim2(math.clamp(now / total, 0, 1), 0, 1, 0)
 							end
 						end
 					end

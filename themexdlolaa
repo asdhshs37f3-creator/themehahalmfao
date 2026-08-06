@@ -2006,6 +2006,10 @@
 			local character = lp.Character:Clone()
 			character.Animate:Destroy()
 
+			-- Preview mode: 3D character (default) or 2D image
+			local preview_image_id = "rbxassetid://127387363367405"
+			local preview_mode = "Character"
+
 			local items = cfg.items; do 
 				items.viewportframe = library:create( "ViewportFrame" , {
 					Parent = self.holder;
@@ -2034,9 +2038,26 @@
 
 				library:connection(run.RenderStepped, function()
 					task.wait()
+					if preview_mode ~= "Character" or character.Parent ~= items.viewportframe then
+						return
+					end
 					cfg.rotation = cfg.rotation + 0.5
 					character:SetPrimaryPartCFrame(cfr(Vector3.new(0, 1, -6)) * angle(0, math.rad(cfg.rotation), 0))
 				end)
+
+				items.preview_image = library:create( "ImageLabel" , {
+					Parent = items.viewportframe;
+					Image = preview_image_id;
+					Size = dim2(1, -10, 1, -10);
+					Position = dim2(0.5, 0, 0.5, 10);
+					AnchorPoint = vec2(0.5, 0.5);
+					BorderColor3 = rgb(0, 0, 0);
+					BackgroundTransparency = 1;
+					Visible = false;
+					ZIndex = 0;
+					BorderSizePixel = 0;
+					BackgroundColor3 = rgb(255, 255, 255)
+				});
 			end 
 
 			local objects = cfg.objects; do 
@@ -5627,7 +5648,24 @@
 				TextLabel.Text = text 
 			end 
 						
-			return setmetatable(cfg, library)   
+			function cfg.set_preview_mode(mode)
+				preview_mode = mode
+				local show_character = preview_mode == "Character"
+				items.preview_image.Visible = not show_character
+				character.Parent = show_character and items.viewportframe or nil
+			end
+
+			self:dropdown({
+				name = "Preview Mode",
+				flag = "EspPreviewMode",
+				items = {"Character", "Image"},
+				default = "Character",
+				callback = function(text)
+					cfg.set_preview_mode(text)
+				end
+			})
+
+			return setmetatable(cfg, library)
 		end 
 
 		function library:playerlist(options) 

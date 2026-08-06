@@ -2038,7 +2038,7 @@
 
 				library:connection(run.RenderStepped, function()
 					task.wait()
-					if preview_mode ~= "Character" or character.Parent ~= items.viewportframe then
+					if preview_mode ~= "Character" then
 						return
 					end
 					cfg.rotation = cfg.rotation + 0.5
@@ -2048,13 +2048,15 @@
 				items.preview_image = library:create( "ImageLabel" , {
 					Parent = items.viewportframe;
 					Image = preview_image_id;
+					ScaleType = Enum.ScaleType.Stretch;
+					ImageTransparency = 0;
 					Size = dim2(1, -10, 1, -10);
 					Position = dim2(0.5, 0, 0.5, 10);
 					AnchorPoint = vec2(0.5, 0.5);
 					BorderColor3 = rgb(0, 0, 0);
 					BackgroundTransparency = 1;
 					Visible = false;
-					ZIndex = 0;
+					ZIndex = 1;
 					BorderSizePixel = 0;
 					BackgroundColor3 = rgb(255, 255, 255)
 				});
@@ -2435,7 +2437,7 @@
 				preview_mode = mode
 				local show_character = preview_mode == "Character"
 				items.preview_image.Visible = not show_character
-				character.Parent = show_character and items.viewportframe or nil
+				items.viewportframe.CurrentCamera = show_character and items.camera or nil
 			end
 
 			self:dropdown({

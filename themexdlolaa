@@ -2011,13 +2011,22 @@
 			local preview_mode = "Character"
 
 			local items = cfg.items; do 
-				items.viewportframe = library:create( "ViewportFrame" , {
+				items.preview_container = library:create( "Frame" , {
 					Parent = self.holder;
 					BackgroundTransparency = 1;
 					Size = dim2(1, 0, 0, 220);
 					BorderColor3 = rgb(0, 0, 0);
 					ZIndex = 1;
-					Position = dim2(0, 0, 0, 10);
+					BorderSizePixel = 0;
+					BackgroundColor3 = rgb(255, 255, 255)
+				});
+
+				items.viewportframe = library:create( "ViewportFrame" , {
+					Parent = items.preview_container;
+					BackgroundTransparency = 1;
+					Size = dim2(1, 0, 1, 0);
+					BorderColor3 = rgb(0, 0, 0);
+					ZIndex = 1;
 					BorderSizePixel = 0;
 					BackgroundColor3 = rgb(255, 255, 255)
 				});
@@ -2046,7 +2055,7 @@
 				end)
 
 				items.preview_image = library:create( "ImageLabel" , {
-					Parent = items.viewportframe;
+					Parent = items.preview_container;
 					Image = preview_image_id;
 					ScaleType = Enum.ScaleType.Stretch;
 					ImageTransparency = 0;
@@ -2064,7 +2073,7 @@
 
 			local objects = cfg.objects; do 
 				objects[ "holder" ] = library:create( "Frame" , {
-					Parent = items.viewportframe;
+					Parent = items.preview_container;
 					Name = "\0";
 					BackgroundTransparency = 1;
 					ZIndex = 3;
@@ -2382,7 +2391,7 @@
 			end -- wtf why diff func defining
 
 			function cfg.refresh_elements( )                                
-				objects.holder.Parent = flags["Enabled"] and items.viewportframe or library.cache
+				objects.holder.Parent = flags["Enabled"] and items.preview_container or library.cache
 
 				local temp = {
 					["Names"] = objects["name"]; 

@@ -2014,7 +2014,7 @@
 				items.preview_container = library:create( "Frame" , {
 					Parent = self.holder;
 					BackgroundTransparency = 1;
-					Size = dim2(1, 0, 0, 220);
+					Size = dim2(1, 0, 0, 260);
 					BorderColor3 = rgb(0, 0, 0);
 					ZIndex = 1;
 					BorderSizePixel = 0;
@@ -2079,7 +2079,7 @@
 					ZIndex = 3;
 					Position = dim2(0.5, 0, 0.5, 10);
 					BorderColor3 = rgb(0, 0, 0);
-					Size = dim2(0, 135, 0, 190);
+					Size = dim2(0, 150, 0, 210);
 					BorderSizePixel = 0;
 					AnchorPoint = vec2(0.5, 0.5);
 					BackgroundColor3 = rgb(255, 255, 255)

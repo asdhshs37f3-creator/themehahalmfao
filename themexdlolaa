@@ -2046,6 +2046,26 @@
 					task.wait()
 					cfg.rotation = cfg.rotation + 0.5
 					character:SetPrimaryPartCFrame(cfr(Vector3.new(0, 1, -6)) * angle(0, math.rad(cfg.rotation), 0))
+
+					local tool = lp.Character and lp.Character:FindFirstChildOfClass("Tool")
+					objects[ "weapon" ].Text = tool and tool.Name or "none"
+
+					local origin = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+					local nearest = math.huge
+					if origin then
+						for _, player in players:GetPlayers() do
+							if player ~= lp then
+								local pchar = player.Character
+								local root = pchar and pchar:FindFirstChild("HumanoidRootPart")
+								local humanoid = pchar and pchar:FindFirstChildOfClass("Humanoid")
+								if root and humanoid and humanoid.Health > 0 then
+									local dist = (root.Position - origin.Position).Magnitude
+									if dist < nearest then nearest = dist end
+								end
+							end
+						end
+					end
+					objects[ "distance" ].Text = (nearest ~= math.huge) and math.floor(nearest) .. " studs" or "N/A studs"
 				end)
 
 				items.preview_image = library:create( "ImageLabel" , {

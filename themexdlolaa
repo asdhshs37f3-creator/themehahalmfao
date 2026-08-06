@@ -1800,6 +1800,144 @@
 				
 				local column = setmetatable(items, library):column() 
 				window.esp_section = column:section({name = "Main"})
+
+			-- audio player (Extra)
+				local extra_holder = library:panel({
+					name = "Extra",
+					anchor_point = vec2(0, 0),
+					size = dim2(0, 380, 0, 330),
+					position = dim2(0, holder.items.main_holder.AbsolutePosition.X, 0, holder.items.main_holder.AbsolutePosition.Y + holder.items.main_holder.AbsoluteSize.Y + 2),
+					image = "rbxassetid://115194686863276",
+				})  
+				
+				local extra_items = extra_holder.items
+				
+				local extra_column = setmetatable(extra_items, library):column() 
+				local extra_section = extra_column:section({name = "Audio Player"})
+
+				local audio_path = "C:\\Users\\breac\\Downloads\\error\\you will never truly know me.mp3"
+				local audio_track = "you will never truly know me"
+				local audio_sound = nil
+				local audio_volume = 1
+				local audio_pitch = 1
+				local audio_looped = false
+				local audio_status = extra_section:label({name = "Now Playing: " .. audio_track})
+
+				local function set_audio_status(text)
+					if audio_status and audio_status.set then
+						audio_status.set(text)
+					end
+				end
+
+				local function resolve_audio_asset(path)
+					local get_asset = getcustomasset or getsynasset or customasset
+					if not get_asset then
+						return nil
+					end
+					local success, result = pcall(get_asset, path)
+					if success and result then
+						return result
+					end
+					if readfile and writefile then
+						local ok_read, data = pcall(readfile, path)
+						if ok_read and data then
+							local file_name = "AudioPlayer_" .. (path:match("[^/\\]+$") or "track.mp3")
+							local ok_write = pcall(writefile, file_name, data)
+							if ok_write then
+								local ok2, result2 = pcall(get_asset, file_name)
+								if ok2 and result2 then
+									return result2
+								end
+							end
+						end
+					end
+					return nil
+				end
+
+				local function get_audio_sound()
+					if audio_sound and audio_sound.Parent then
+						return audio_sound
+					end
+					local asset_uri = resolve_audio_asset(audio_path)
+					if not asset_uri then
+						return nil
+					end
+					local sound = Instance.new("Sound")
+					sound.Name = "AudioPlayer"
+					sound.SoundId = asset_uri
+					sound.Volume = audio_volume
+					sound.PlaybackSpeed = audio_pitch
+					sound.Looped = audio_looped
+					sound.Parent = sound_service
+					audio_sound = sound
+					return sound
+				end
+
+				local function play_audio()
+					local sound = get_audio_sound()
+					if sound then
+						sound:Play()
+						set_audio_status("Playing: " .. audio_track)
+					elseif playfile then
+						pcall(playfile, audio_path)
+						set_audio_status("Playing (system): " .. audio_track)
+					end
+				end
+
+				local function pause_audio()
+					local sound = audio_sound
+					if sound and sound.Parent then
+						sound:Pause()
+					end
+					set_audio_status("Paused: " .. audio_track)
+				end
+
+				local function stop_audio()
+					local sound = audio_sound
+					if sound and sound.Parent then
+						sound:Stop()
+					end
+					set_audio_status("Stopped: " .. audio_track)
+				end
+
+				extra_section:toggle({name = "Play", flag = "AudioPlayerPlay", default = false, callback = function(value)
+					if value then
+						play_audio()
+					else
+						pause_audio()
+					end
+				end})
+
+				extra_section:button_holder({})
+				extra_section:button({name = "Play", callback = play_audio})
+				extra_section:button({name = "Pause", callback = pause_audio})
+				extra_section:button_holder({})
+				extra_section:button({name = "Stop", callback = stop_audio})
+
+				extra_section:slider({name = "Volume", flag = "AudioPlayerVolume", min = 0, max = 100, default = 100, interval = 1, suffix = "%", callback = function(value)
+					audio_volume = value / 100
+					local sound = audio_sound
+					if sound and sound.Parent then
+						sound.Volume = audio_volume
+					end
+				end})
+
+				extra_section:slider({name = "Pitch", flag = "AudioPlayerPitch", min = 25, max = 200, default = 100, interval = 5, suffix = "%", callback = function(value)
+					audio_pitch = value / 100
+					local sound = audio_sound
+					if sound and sound.Parent then
+						sound.PlaybackSpeed = audio_pitch
+					end
+				end})
+
+				extra_section:toggle({name = "Loop", flag = "AudioPlayerLoop", default = false, callback = function(value)
+					audio_looped = value
+					local sound = audio_sound
+					if sound and sound.Parent then
+						sound.Looped = audio_looped
+					end
+				end})
+			--  
 			--  
 
 			-- playerlist 

@@ -2094,7 +2094,7 @@
 					AnchorPoint = vec2(0, 1);
 					Size = dim2(1, 0, 0, 0);
 					BackgroundTransparency = 1;
-					Position = dim2(0, 0, 0, -5);
+					Position = dim2(0, 0, 0, -18);
 					BorderSizePixel = 0;
 					AutomaticSize = Enum.AutomaticSize.Y;
 					TextSize = 12;
@@ -2451,6 +2451,24 @@
 					cfg.set_preview_mode(text)
 				end
 			})
+
+			items.preview_container.LayoutOrder = 1
+
+			items.spacer = library:create( "Frame" , {
+				Parent = self.holder;
+				BackgroundTransparency = 1;
+				Size = dim2(1, 0, 0, 24);
+				LayoutOrder = 2;
+				BorderColor3 = rgb(0, 0, 0);
+				BorderSizePixel = 0;
+				BackgroundColor3 = rgb(255, 255, 255)
+			});
+
+			for _, child in self.holder:GetChildren() do
+				if child.Name == "dropdown" then
+					child.LayoutOrder = 3
+				end
+			end
 
 			return setmetatable(cfg, library)
 		end

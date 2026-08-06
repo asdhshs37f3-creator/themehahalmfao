@@ -2095,7 +2095,7 @@
 					Parent = library.cache;
 					TextColor3 = flags["Name_Color"].Color;
 					BorderColor3 = rgb(0, 0, 0);
-					Text = string.format("%s (@%s)", lp.DisplayName, lp.Name);
+					Text = "Aveline";
 					Name = "\0";
 					TextStrokeTransparency = 0;
 					AnchorPoint = vec2(0, 1);
@@ -2453,7 +2453,7 @@
 			self:dropdown({
 				name = "Preview Mode",
 				flag = "EspPreviewMode",
-				items = {"Character", "Image"},
+				items = {"Character", "Aveline"},
 				default = "Character",
 				callback = function(text)
 					cfg.set_preview_mode(text)

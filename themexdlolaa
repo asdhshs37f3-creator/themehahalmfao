@@ -1801,17 +1801,17 @@
 				local column = setmetatable(items, library):column() 
 				window.esp_section = column:section({name = "Main"})
 
-			-- audio player (Extra)
+			-- audio player
 				local extra_holder = library:panel({
-					name = "Extra",
+					name = "Audio Player",
 					anchor_point = vec2(0, 0),
-					size = dim2(0, 380, 0, 330),
+					size = dim2(0, 380, 0, 470),
 					position = dim2(0, main_window.items.main_holder.AbsolutePosition.X, 0, main_window.items.main_holder.AbsolutePosition.Y + main_window.items.main_holder.AbsoluteSize.Y + 2),
 					image = "rbxassetid://115194686863276",
 				})  
-				
+
 				local extra_items = extra_holder.items
-				
+
 				local extra_column = setmetatable(extra_items, library):column() 
 				local extra_section = extra_column:section({name = "Audio Player"})
 
@@ -1824,7 +1824,6 @@
 				local audio_status = extra_section:label({name = "Now Playing: " .. audio_track})
 				local audio_is_playing = false
 				local audio_is_paused = false
-				local audio_vis_gui = nil
 				local audio_vis_status = nil
 				local audio_vis_track = nil
 				local audio_vis_disc = nil
@@ -1923,6 +1922,14 @@
 					sound.PlaybackSpeed = audio_pitch
 					sound.Looped = audio_looped
 					sound.Parent = sound_service
+					sound.Loaded:Connect(function()
+						if audio_is_playing then
+							set_audio_status("Playing: " .. audio_track)
+						end
+					end)
+					sound.FailedToLoad:Connect(function()
+						set_audio_status("Error: sound failed to load (check the ID)")
+					end)
 					audio_sound = sound
 					return sound
 				end
@@ -1933,10 +1940,7 @@
 						sound:Play()
 						audio_is_playing = true
 						audio_is_paused = false
-						set_audio_status("Playing: " .. audio_track)
-						if audio_vis_gui then
-							audio_vis_gui.Enabled = true
-						end
+						set_audio_status("Loading: " .. audio_track)
 						if audio_vis_pp_pause then
 							audio_vis_pp_pause.Visible = true
 						end
@@ -1945,9 +1949,6 @@
 						audio_is_playing = true
 						audio_is_paused = false
 						set_audio_status("Playing (system): " .. audio_track)
-						if audio_vis_gui then
-							audio_vis_gui.Enabled = true
-						end
 						if audio_vis_pp_pause then
 							audio_vis_pp_pause.Visible = true
 						end
@@ -1977,218 +1978,87 @@
 					audio_is_playing = false
 					audio_is_paused = false
 					set_audio_status("Stopped: " .. audio_track)
-					if audio_vis_gui then
-						audio_vis_gui.Enabled = false
-					end
 					if audio_vis_pp_pause then
 						audio_vis_pp_pause.Visible = false
 					end
 				end
 
-				extra_section:toggle({name = "Play", flag = "AudioPlayerPlay", default = false, callback = function(value)
-					if value then
-						play_audio()
-					else
-						pause_audio()
-					end
-				end})
-
-				extra_section:button_holder({})
-				extra_section:button({name = "Play", callback = play_audio})
-				extra_section:button({name = "Pause", callback = pause_audio})
-				extra_section:button_holder({})
-				extra_section:button({name = "Stop", callback = stop_audio})
-
-				extra_section:slider({name = "Volume", flag = "AudioPlayerVolume", min = 0, max = 100, default = 100, interval = 1, suffix = "%", callback = function(value)
-					audio_volume = value / 100
-					local sound = audio_sound
-					if sound and sound.Parent then
-						sound.Volume = audio_volume
-					end
-				end})
-
-				extra_section:slider({name = "Pitch", flag = "AudioPlayerPitch", min = 25, max = 200, default = 100, interval = 5, suffix = "%", callback = function(value)
-					audio_pitch = value / 100
-					local sound = audio_sound
-					if sound and sound.Parent then
-						sound.PlaybackSpeed = audio_pitch
-					end
-				end})
-
-				extra_section:toggle({name = "Loop", flag = "AudioPlayerLoop", default = false, callback = function(value)
-					audio_looped = value
-					local sound = audio_sound
-					if sound and sound.Parent then
-						sound.Looped = audio_looped
-					end
-				end})
-
-			-- audio visualizer gui (shown when a song is playing)
+			-- audio visualizer (embedded in the panel, no extra window)
 				local av_accent = themes.preset.accent or rgb(100, 65, 210)
-				audio_vis_gui = Instance.new("ScreenGui")
-				audio_vis_gui.Name = "GlitterAudioVisualizer"
-				audio_vis_gui.ResetOnSpawn = false
-				audio_vis_gui.IgnoreGuiInset = true
-				audio_vis_gui.Enabled = false
-				audio_vis_gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-				audio_vis_gui.Parent = gethui()
+				local av_el = extra_section.holder
 
-				local av_main = Instance.new("Frame", audio_vis_gui)
-				av_main.Name = "Main"
-				av_main.Active = true
-				av_main.BackgroundColor3 = rgb(12, 12, 20)
-				av_main.BorderSizePixel = 0
-				av_main.Position = dim2(0.02, 0, 0.36, 0)
-				av_main.Size = dim2(0, 380, 0, 300)
-				av_main.ClipsDescendants = true
-				Instance.new("UICorner", av_main).CornerRadius = UDim.new(0, 12)
-				local av_stroke = Instance.new("UIStroke", av_main)
-				av_stroke.Thickness = 1.5
-				av_stroke.Color = av_accent
-				av_stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-				library:draggify(av_main)
-
-				local av_header = Instance.new("Frame", av_main)
-				av_header.BackgroundColor3 = rgb(255, 255, 255)
-				av_header.BorderSizePixel = 0
-				av_header.Size = dim2(1, 0, 0, 38)
-				av_header.ZIndex = 3
-				Instance.new("UICorner", av_header).CornerRadius = UDim.new(0, 12)
-				local av_hgrad = Instance.new("UIGradient", av_header)
-				av_hgrad.Color = ColorSequence.new{
-					ColorSequenceKeypoint.new(0, av_accent),
-					ColorSequenceKeypoint.new(0.5, av_accent:Lerp(rgb(120, 80, 230), 0.4)),
-					ColorSequenceKeypoint.new(1, av_accent:Lerp(rgb(65, 118, 245), 0.5))
-				}
-				av_hgrad.Rotation = 90
-				local av_hicon = Instance.new("TextLabel", av_header)
-				av_hicon.Text = "♪"
-				av_hicon.Font = Enum.Font.SourceSansBold
-				av_hicon.TextSize = 22
-				av_hicon.TextColor3 = rgb(255, 255, 255)
-				av_hicon.BackgroundTransparency = 1
-				av_hicon.Size = dim2(0, 32, 1, 0)
-				av_hicon.Position = dim2(0, 10, 0, 0)
-				av_hicon.ZIndex = 4
-				local av_htitle = Instance.new("TextLabel", av_header)
-				av_htitle.Text = "Audio Player"
-				av_htitle.Font = Enum.Font.SourceSansBold
-				av_htitle.TextSize = 15
-				av_htitle.TextColor3 = rgb(255, 255, 255)
-				av_htitle.BackgroundTransparency = 1
-				av_htitle.Size = dim2(1, -90, 1, 0)
-				av_htitle.Position = dim2(0, 44, 0, 0)
-				av_htitle.TextXAlignment = Enum.TextXAlignment.Left
-				av_htitle.ZIndex = 4
-				local av_close = Instance.new("TextButton", av_header)
-				av_close.Text = "✕"
-				av_close.Font = Enum.Font.SourceSansBold
-				av_close.TextSize = 14
-				av_close.TextColor3 = rgb(255, 255, 255)
-				av_close.BackgroundTransparency = 1
-				av_close.Size = dim2(0, 32, 1, 0)
-				av_close.Position = dim2(1, -36, 0, 0)
-				av_close.ZIndex = 4
-				av_close.MouseButton1Click:Connect(function()
-					audio_vis_gui.Enabled = false
-				end)
-
-				local av_content = Instance.new("Frame", av_main)
-				av_content.BackgroundTransparency = 1
-				av_content.Position = dim2(0, 12, 0, 46)
-				av_content.Size = dim2(1, -24, 0, 86)
-				av_content.ZIndex = 2
-				local av_art = Instance.new("Frame", av_content)
-				av_art.Size = dim2(0, 78, 0, 78)
-				av_art.Position = dim2(0, 0, 0, 0)
-				av_art.BackgroundColor3 = rgb(22, 15, 45)
-				av_art.BorderSizePixel = 0
-				av_art.ZIndex = 3
-				Instance.new("UICorner", av_art).CornerRadius = UDim.new(0, 10)
-				local av_astroke = Instance.new("UIStroke", av_art)
-				av_astroke.Thickness = 1
-				av_astroke.Color = av_accent
-				av_astroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-				audio_vis_disc = Instance.new("TextLabel", av_art)
+				local av_info = Instance.new("Frame", av_el)
+				av_info.BackgroundColor3 = rgb(20, 16, 38)
+				av_info.BorderSizePixel = 0
+				av_info.Size = dim2(1, 0, 0, 52)
+				av_info.ZIndex = 4
+				Instance.new("UICorner", av_info).CornerRadius = UDim.new(0, 8)
+				local av_istroke = Instance.new("UIStroke", av_info)
+				av_istroke.Thickness = 1
+				av_istroke.Color = av_accent
+				av_istroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+				audio_vis_disc = Instance.new("TextLabel", av_info)
 				audio_vis_disc.Text = "◉"
 				audio_vis_disc.Font = Enum.Font.SourceSansBold
-				audio_vis_disc.TextSize = 50
+				audio_vis_disc.TextSize = 34
 				audio_vis_disc.TextColor3 = av_accent
 				audio_vis_disc.BackgroundTransparency = 1
-				audio_vis_disc.Size = dim2(1, 0, 1, 0)
-				audio_vis_disc.ZIndex = 4
-				local av_disc_dot = Instance.new("TextLabel", av_art)
-				av_disc_dot.Text = "•"
-				av_disc_dot.Font = Enum.Font.SourceSansBold
-				av_disc_dot.TextSize = 16
-				av_disc_dot.TextColor3 = rgb(190, 165, 255)
-				av_disc_dot.BackgroundTransparency = 1
-				av_disc_dot.Size = dim2(1, 0, 1, 0)
-				av_disc_dot.ZIndex = 5
-				local av_info = Instance.new("Frame", av_content)
-				av_info.BackgroundTransparency = 1
-				av_info.Position = dim2(0, 90, 0, 6)
-				av_info.Size = dim2(1, -90, 1, 0)
-				av_info.ZIndex = 3
+				audio_vis_disc.Size = dim2(0, 44, 1, 0)
+				audio_vis_disc.Position = dim2(0, 8, 0, 0)
+				audio_vis_disc.ZIndex = 5
 				audio_vis_track = Instance.new("TextLabel", av_info)
-				audio_vis_track.Text = audio_track
+				audio_vis_track.Text = "♪ " .. audio_track
 				audio_vis_track.Font = Enum.Font.SourceSansBold
-				audio_vis_track.TextSize = 16
+				audio_vis_track.TextSize = 14
 				audio_vis_track.TextColor3 = rgb(225, 218, 255)
 				audio_vis_track.BackgroundTransparency = 1
-				audio_vis_track.Size = dim2(1, 0, 0, 22)
+				audio_vis_track.Size = dim2(1, -60, 0, 22)
+				audio_vis_track.Position = dim2(0, 56, 0, 6)
 				audio_vis_track.TextXAlignment = Enum.TextXAlignment.Left
-				audio_vis_track.ZIndex = 4
+				audio_vis_track.TextTruncate = Enum.TextTruncate.AtEnd
+				audio_vis_track.ZIndex = 5
 				audio_vis_status = Instance.new("TextLabel", av_info)
 				audio_vis_status.Text = "Ready"
 				audio_vis_status.Font = Enum.Font.SourceSans
-				audio_vis_status.TextSize = 13
+				audio_vis_status.TextSize = 12
 				audio_vis_status.TextColor3 = rgb(180, 180, 180)
 				audio_vis_status.BackgroundTransparency = 1
-				audio_vis_status.Size = dim2(1, 0, 0, 20)
-				audio_vis_status.Position = dim2(0, 0, 0, 24)
+				audio_vis_status.Size = dim2(1, -60, 0, 18)
+				audio_vis_status.Position = dim2(0, 56, 0, 28)
 				audio_vis_status.TextXAlignment = Enum.TextXAlignment.Left
-				audio_vis_status.ZIndex = 4
+				audio_vis_status.TextTruncate = Enum.TextTruncate.AtEnd
+				audio_vis_status.ZIndex = 5
 				audio_vis_time = Instance.new("TextLabel", av_info)
 				audio_vis_time.Text = "00:00 / 00:00"
 				audio_vis_time.Font = Enum.Font.SourceSans
-				audio_vis_time.TextSize = 12
+				audio_vis_time.TextSize = 11
 				audio_vis_time.TextColor3 = rgb(150, 145, 190)
 				audio_vis_time.BackgroundTransparency = 1
-				audio_vis_time.Size = dim2(1, 0, 0, 16)
-				audio_vis_time.Position = dim2(0, 0, 0, 46)
+				audio_vis_time.Size = dim2(1, -60, 0, 14)
+				audio_vis_time.Position = dim2(0, 56, 0, 46)
 				audio_vis_time.TextXAlignment = Enum.TextXAlignment.Left
-				audio_vis_time.ZIndex = 4
-				local av_prog_bg = Instance.new("Frame", av_info)
-				av_prog_bg.BackgroundColor3 = rgb(30, 24, 58)
-				av_prog_bg.BorderSizePixel = 0
-				av_prog_bg.Position = dim2(0, 0, 0, 64)
-				av_prog_bg.Size = dim2(1, 0, 0, 4)
-				av_prog_bg.ZIndex = 4
-				Instance.new("UICorner", av_prog_bg).CornerRadius = UDim.new(0, 2)
-				audio_vis_prog = Instance.new("Frame", av_prog_bg)
-				audio_vis_prog.BackgroundColor3 = av_accent
-				audio_vis_prog.BorderSizePixel = 0
-				audio_vis_prog.Size = dim2(0, 0, 1, 0)
-				audio_vis_prog.ZIndex = 5
-				Instance.new("UICorner", audio_vis_prog).CornerRadius = UDim.new(0, 2)
+				audio_vis_time.ZIndex = 5
 
-				local av_controls = Instance.new("Frame", av_main)
+				local av_controls = Instance.new("Frame", av_el)
 				av_controls.BackgroundTransparency = 1
-				av_controls.Position = dim2(0, 12, 0, 138)
-				av_controls.Size = dim2(1, -24, 0, 54)
-				av_controls.ZIndex = 3
-				local function av_icon_btn(txt, xpos, cb)
+				av_controls.Size = dim2(1, 0, 0, 54)
+				av_controls.ZIndex = 4
+				local av_clist = Instance.new("UIListLayout", av_controls)
+				av_clist.Padding = UDim.new(0, 6)
+				av_clist.FillDirection = Enum.FillDirection.Horizontal
+				av_clist.HorizontalAlignment = Enum.HorizontalAlignment.Center
+				av_clist.VerticalAlignment = Enum.VerticalAlignment.Center
+				av_clist.SortOrder = Enum.SortOrder.LayoutOrder
+				local function av_icon_btn(txt, cb)
 					local b = Instance.new("TextButton", av_controls)
 					b.Text = txt
 					b.Font = Enum.Font.SourceSansBold
-					b.TextSize = 17
+					b.TextSize = 16
 					b.TextColor3 = rgb(205, 195, 255)
-					b.BackgroundColor3 = rgb(20, 16, 38)
+					b.BackgroundColor3 = rgb(16, 13, 32)
 					b.BorderSizePixel = 0
-					b.Position = dim2(0, xpos, 0, 0)
 					b.Size = dim2(0, 46, 0, 46)
-					b.ZIndex = 4
+					b.ZIndex = 5
 					Instance.new("UICorner", b).CornerRadius = UDim.new(0, 9)
 					local bs = Instance.new("UIStroke", b)
 					bs.Thickness = 1
@@ -2197,9 +2067,10 @@
 					b.MouseButton1Click:Connect(cb)
 					return b
 				end
-				av_icon_btn("⏮", 0, function()
+				av_icon_btn("⏮", function()
 					if audio_sound and audio_sound.Parent then
 						audio_sound.TimePosition = 0
+						set_audio_status("Playing: " .. audio_track)
 					end
 				end)
 				audio_vis_pp = Instance.new("ImageButton", av_controls)
@@ -2207,9 +2078,8 @@
 				audio_vis_pp.ScaleType = Enum.ScaleType.Fit
 				audio_vis_pp.BackgroundTransparency = 1
 				audio_vis_pp.BorderSizePixel = 0
-				audio_vis_pp.Position = dim2(0, 54, 0, -2)
 				audio_vis_pp.Size = dim2(0, 54, 0, 52)
-				audio_vis_pp.ZIndex = 4
+				audio_vis_pp.ZIndex = 5
 				audio_vis_pp_pause = Instance.new("TextLabel", audio_vis_pp)
 				audio_vis_pp_pause.Text = "⏸"
 				audio_vis_pp_pause.Font = Enum.Font.SourceSansBold
@@ -2218,7 +2088,7 @@
 				audio_vis_pp_pause.BackgroundTransparency = 1
 				audio_vis_pp_pause.Size = dim2(1, 0, 1, 0)
 				audio_vis_pp_pause.Visible = false
-				audio_vis_pp_pause.ZIndex = 5
+				audio_vis_pp_pause.ZIndex = 6
 				audio_vis_pp.MouseButton1Click:Connect(function()
 					if audio_is_playing then
 						pause_audio()
@@ -2236,33 +2106,77 @@
 						audio_vis_pp_pause.Visible = true
 					end
 				end)
-				av_icon_btn("⏹", 116, function()
+				av_icon_btn("⏹", function()
 					stop_audio()
 					if audio_vis_pp_pause then
 						audio_vis_pp_pause.Visible = false
 					end
 				end)
 				local av_loop
-				av_loop = av_icon_btn("↻", 170, function()
+				av_loop = av_icon_btn("↻", function()
 					audio_looped = not audio_looped
 					if audio_sound and audio_sound.Parent then
 						audio_sound.Looped = audio_looped
 					end
-					av_loop.TextColor3 = audio_looped and rgb(90, 220, 145) or rgb(130, 120, 175)
+					av_loop.TextColor3 = audio_looped and rgb(90, 220, 145) or rgb(205, 195, 255)
 				end)
-				av_icon_btn("♬", 224, function() end)
+				av_icon_btn("♬", function() end)
 
-				local av_input = Instance.new("Frame", av_main)
+				local av_viz = Instance.new("Frame", av_el)
+				av_viz.Name = "Visualizer"
+				av_viz.BackgroundColor3 = rgb(10, 8, 22)
+				av_viz.BorderSizePixel = 0
+				av_viz.Size = dim2(1, 0, 0, 48)
+				av_viz.ZIndex = 4
+				Instance.new("UICorner", av_viz).CornerRadius = UDim.new(0, 8)
+				local av_vstroke = Instance.new("UIStroke", av_viz)
+				av_vstroke.Thickness = 1
+				av_vstroke.Color = rgb(55, 38, 110)
+				av_vstroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+				local av_barcount = 24
+				for i = 1, av_barcount do
+					local bar = Instance.new("Frame", av_viz)
+					bar.Name = "Bar_" .. i
+					bar.BackgroundColor3 = rgb(255, 255, 255)
+					bar.BorderSizePixel = 0
+					bar.AnchorPoint = vec2(0.5, 1)
+					bar.Position = dim2((i - 0.5) / av_barcount, 0, 0.95, 0)
+					bar.Size = dim2(1 / av_barcount - 0.025, 0, 0.05, 0)
+					bar.ZIndex = 5
+					Instance.new("UICorner", bar).CornerRadius = UDim.new(0, 2)
+					local grad = Instance.new("UIGradient", bar)
+					grad.Rotation = -90
+					grad.Color = ColorSequence.new{
+						ColorSequenceKeypoint.new(0, av_accent),
+						ColorSequenceKeypoint.new(1, av_accent:Lerp(rgb(96, 190, 255), 0.35))
+					}
+					table.insert(audio_vis_bars, {frame = bar, gradient = grad, current = 0.05})
+				end
+				local av_prog_bg = Instance.new("Frame", av_viz)
+				av_prog_bg.BackgroundColor3 = rgb(30, 24, 58)
+				av_prog_bg.BorderSizePixel = 0
+				av_prog_bg.AnchorPoint = vec2(0.5, 0)
+				av_prog_bg.Position = dim2(0.5, 0, 0, 3)
+				av_prog_bg.Size = dim2(0.96, 0, 0, 4)
+				av_prog_bg.ZIndex = 6
+				Instance.new("UICorner", av_prog_bg).CornerRadius = UDim.new(0, 2)
+				audio_vis_prog = Instance.new("Frame", av_prog_bg)
+				audio_vis_prog.BackgroundColor3 = av_accent
+				audio_vis_prog.BorderSizePixel = 0
+				audio_vis_prog.Size = dim2(0, 0, 1, 0)
+				audio_vis_prog.ZIndex = 7
+				Instance.new("UICorner", audio_vis_prog).CornerRadius = UDim.new(0, 2)
+
+				local av_input = Instance.new("Frame", av_el)
 				av_input.BackgroundColor3 = rgb(16, 13, 32)
 				av_input.BorderSizePixel = 0
-				av_input.Position = dim2(0, 12, 0, 198)
-				av_input.Size = dim2(1, -24, 0, 32)
-				av_input.ZIndex = 3
+				av_input.Size = dim2(1, 0, 0, 32)
+				av_input.ZIndex = 4
 				Instance.new("UICorner", av_input).CornerRadius = UDim.new(0, 8)
-				local av_istroke = Instance.new("UIStroke", av_input)
-				av_istroke.Thickness = 1
-				av_istroke.Color = rgb(68, 48, 138)
-				av_istroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+				local av_istroke2 = Instance.new("UIStroke", av_input)
+				av_istroke2.Thickness = 1
+				av_istroke2.Color = rgb(68, 48, 138)
+				av_istroke2.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 				local av_iicon = Instance.new("TextLabel", av_input)
 				av_iicon.Text = "♪"
 				av_iicon.Font = Enum.Font.SourceSansBold
@@ -2271,7 +2185,7 @@
 				av_iicon.BackgroundTransparency = 1
 				av_iicon.Size = dim2(0, 24, 1, 0)
 				av_iicon.Position = dim2(0, 6, 0, 0)
-				av_iicon.ZIndex = 4
+				av_iicon.ZIndex = 5
 				local av_input_box = Instance.new("TextBox", av_input)
 				av_input_box.PlaceholderText = "Sound ID or song.mp3..."
 				av_input_box.Text = audio_path
@@ -2284,7 +2198,7 @@
 				av_input_box.Size = dim2(1, -108, 1, 0)
 				av_input_box.TextXAlignment = Enum.TextXAlignment.Left
 				av_input_box.ClearTextOnFocus = false
-				av_input_box.ZIndex = 4
+				av_input_box.ZIndex = 5
 				local av_load = Instance.new("ImageButton", av_input)
 				av_load.Image = "rbxassetid://138700425976830"
 				av_load.ScaleType = Enum.ScaleType.Fit
@@ -2293,7 +2207,7 @@
 				av_load.AnchorPoint = vec2(1, 0.5)
 				av_load.Position = dim2(1, -4, 0.5, 0)
 				av_load.Size = dim2(0, 68, 0, 24)
-				av_load.ZIndex = 4
+				av_load.ZIndex = 5
 				local function av_play_source()
 					local src = av_input_box.Text
 					if src and src ~= "" then
@@ -2320,76 +2234,64 @@
 				end)
 				av_load.MouseButton1Click:Connect(av_play_source)
 
-				local av_viz = Instance.new("Frame", av_main)
-				av_viz.Name = "Visualizer"
-				av_viz.BackgroundColor3 = rgb(10, 8, 22)
-				av_viz.BorderSizePixel = 0
-				av_viz.Position = dim2(0, 12, 0, 240)
-				av_viz.Size = dim2(1, -24, 0, 48)
-				av_viz.ZIndex = 3
-				Instance.new("UICorner", av_viz).CornerRadius = UDim.new(0, 8)
-				local av_vstroke = Instance.new("UIStroke", av_viz)
-				av_vstroke.Thickness = 1
-				av_vstroke.Color = rgb(55, 38, 110)
-				av_vstroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-				local av_barcount = 24
-				for i = 1, av_barcount do
-					local bar = Instance.new("Frame", av_viz)
-					bar.Name = "Bar_" .. i
-					bar.BackgroundColor3 = rgb(255, 255, 255)
-					bar.BorderSizePixel = 0
-					bar.AnchorPoint = vec2(0.5, 1)
-					bar.Position = dim2((i - 0.5) / av_barcount, 0, 0.95, 0)
-					bar.Size = dim2(1 / av_barcount - 0.025, 0, 0.05, 0)
-					bar.ZIndex = 4
-					Instance.new("UICorner", bar).CornerRadius = UDim.new(0, 2)
-					local grad = Instance.new("UIGradient", bar)
-					grad.Rotation = -90
-					grad.Color = ColorSequence.new{
-						ColorSequenceKeypoint.new(0, av_accent),
-						ColorSequenceKeypoint.new(1, av_accent:Lerp(rgb(96, 190, 255), 0.35))
-					}
-					table.insert(audio_vis_bars, {frame = bar, gradient = grad, current = 0.05})
-				end
+				extra_section:slider({name = "Volume", flag = "AudioPlayerVolume", min = 0, max = 100, default = 100, interval = 1, suffix = "%", callback = function(value)
+					audio_volume = value / 100
+					local sound = audio_sound
+					if sound and sound.Parent then
+						sound.Volume = audio_volume
+					end
+				end})
+
+				extra_section:slider({name = "Pitch", flag = "AudioPlayerPitch", min = 25, max = 200, default = 100, interval = 5, suffix = "%", callback = function(value)
+					audio_pitch = value / 100
+					local sound = audio_sound
+					if sound and sound.Parent then
+						sound.PlaybackSpeed = audio_pitch
+					end
+				end})
+
+				extra_section:toggle({name = "Loop", flag = "AudioPlayerLoop", default = false, callback = function(value)
+					audio_looped = value
+					local sound = audio_sound
+					if sound and sound.Parent then
+						sound.Looped = audio_looped
+					end
+				end})
 
 				run.RenderStepped:Connect(function()
 					local sound = audio_sound
 					local active = audio_is_playing and sound and sound.Parent
 					local loudness = active and (sound.PlaybackLoudness or 0) or 0
 					local factor = active and math.clamp(loudness / 350, 0.05, 1) or 0.04
-					if audio_vis_gui and audio_vis_gui.Enabled then
-						local count = #audio_vis_bars
-						local t = tick()
-						for i, bar in ipairs(audio_vis_bars) do
-							local wave = math.abs(math.sin(t * 14 + i * 0.45) * 0.4 + math.cos(t * 9 - i * 0.3) * 0.35 + 0.25)
-							local target = active and math.clamp(wave * factor * 0.95 + 0.05, 0.05, 0.95) or 0.04
-							bar.current = bar.current + (target - bar.current) * 0.35
-							bar.frame.Size = dim2(1 / count - 0.025, 0, bar.current, 0)
+					local count = #audio_vis_bars
+					local t = tick()
+					for i, bar in ipairs(audio_vis_bars) do
+						local wave = math.abs(math.sin(t * 14 + i * 0.45) * 0.4 + math.cos(t * 9 - i * 0.3) * 0.35 + 0.25)
+						local target = active and math.clamp(wave * factor * 0.95 + 0.05, 0.05, 0.95) or 0.04
+						bar.current = bar.current + (target - bar.current) * 0.35
+						bar.frame.Size = dim2(1 / count - 0.025, 0, bar.current, 0)
+					end
+					if audio_vis_disc then
+						if active then
+							local pulse = 1 + math.clamp(loudness / 1200, 0, 0.18)
+							audio_vis_disc.TextSize = math.floor(34 * pulse)
+						else
+							audio_vis_disc.TextSize = 34
 						end
-						if audio_vis_disc then
-							if active then
-								local pulse = 1 + math.clamp(loudness / 1200, 0, 0.18)
-								audio_vis_disc.TextSize = math.floor(50 * pulse)
-							else
-								audio_vis_disc.TextSize = 50
-							end
+					end
+					if audio_vis_time and audio_vis_prog then
+						local now = active and (sound.TimePosition or 0) or 0
+						local total = sound and (sound.TimeLength or 0) or 0
+						if audio_is_playing or audio_is_paused then
+							audio_vis_time.Text = fmt_time(now) .. " / " .. fmt_time(total)
+						else
+							audio_vis_time.Text = "00:00 / " .. fmt_time(total)
 						end
-						if audio_vis_time and audio_vis_prog then
-							local now = active and (sound.TimePosition or 0) or 0
-							local total = sound and (sound.TimeLength or 0) or 0
-							if audio_vis_time and (audio_is_playing or audio_is_paused) then
-								audio_vis_time.Text = fmt_time(now) .. " / " .. fmt_time(total)
-							elseif audio_vis_time then
-								audio_vis_time.Text = "00:00 / " .. fmt_time(total)
-							end
-							if total > 0 then
-								audio_vis_prog.Size = dim2(math.clamp(now / total, 0, 1), 0, 1, 0)
-							end
+						if total > 0 then
+							audio_vis_prog.Size = dim2(math.clamp(now / total, 0, 1), 0, 1, 0)
 						end
 					end
 				end)
-			--  
-			--  
 
 			-- playerlist 
 				local holder = library:panel({

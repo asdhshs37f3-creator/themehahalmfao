@@ -1791,7 +1791,7 @@
 				local holder = library:panel({
 					name = "Preview", 
 					anchor_point = vec2(0, 0),
-					size = dim2(0, 360, 0, 440),
+					size = dim2(0, 400, 0, 500),
 					position = dim2(0, style.items.main_holder.AbsolutePosition.X, 0, style.items.main_holder.AbsolutePosition.Y + style.items.main_holder.AbsoluteSize.Y + 2),
 					image = "rbxassetid://77684377836328",
 				})  
@@ -2451,7 +2451,7 @@
 			end
 
 			self:dropdown({
-				name = "Preview Mode",
+				name = "Mode",
 				flag = "EspPreviewMode",
 				items = {"Character", "Aveline"},
 				default = "Character",

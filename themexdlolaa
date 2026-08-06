@@ -2007,7 +2007,7 @@
 			character.Animate:Destroy()
 
 			-- Preview mode: 3D character (default) or 2D image
-			local preview_image_id = "rbxassetid://127387363367405"
+			local preview_image_id = "rbxassetid://139399821337795"
 			local preview_mode = "Character"
 
 			local items = cfg.items; do 

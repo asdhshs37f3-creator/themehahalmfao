@@ -2431,6 +2431,23 @@
 				end 
 			end)
 
+			function cfg.set_preview_mode(mode)
+				preview_mode = mode
+				local show_character = preview_mode == "Character"
+				items.preview_image.Visible = not show_character
+				character.Parent = show_character and items.viewportframe or nil
+			end
+
+			self:dropdown({
+				name = "Preview Mode",
+				flag = "EspPreviewMode",
+				items = {"Character", "Image"},
+				default = "Character",
+				callback = function(text)
+					cfg.set_preview_mode(text)
+				end
+			})
+
 			return setmetatable(cfg, library)
 		end
 
@@ -5648,23 +5665,6 @@
 				TextLabel.Text = text 
 			end 
 						
-			function cfg.set_preview_mode(mode)
-				preview_mode = mode
-				local show_character = preview_mode == "Character"
-				items.preview_image.Visible = not show_character
-				character.Parent = show_character and items.viewportframe or nil
-			end
-
-			self:dropdown({
-				name = "Preview Mode",
-				flag = "EspPreviewMode",
-				items = {"Character", "Image"},
-				default = "Character",
-				callback = function(text)
-					cfg.set_preview_mode(text)
-				end
-			})
-
 			return setmetatable(cfg, library)
 		end 
 

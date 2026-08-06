@@ -2048,11 +2048,68 @@
 
 				library:connection(run.RenderStepped, function()
 					task.wait()
+
+					pcall(function()
+						local weapon_tool = lp.Character and lp.Character:FindFirstChildOfClass("Tool")
+						objects.weapon.Text = weapon_tool and weapon_tool.Name or "none"
+
+						local lpHRP = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+						local nearest_dist = math.huge
+						if lpHRP then
+							for _, plr in players:GetPlayers() do
+								if plr ~= lp and plr.Character then
+									local plrHRP = plr.Character:FindFirstChild("HumanoidRootPart")
+									if plrHRP then
+										local dist = (plrHRP.Position - lpHRP.Position).Magnitude
+										if dist < nearest_dist then
+											nearest_dist = dist
+										end
+									end
+								end
+							end
+						end
+						objects.distance.Text = nearest_dist ~= math.huge and (math.floor(nearest_dist / 3.5714285714) .. "m") or "0m"
+					end)
+
 					if preview_mode ~= "Character" then
 						return
 					end
 					cfg.rotation = cfg.rotation + 0.5
 					character:SetPrimaryPartCFrame(cfr(Vector3.new(0, 1, -6)) * angle(0, math.rad(cfg.rotation), 0))
+
+					-- fit the esp box around the rendered character
+					pcall(function()
+						local bbCFrame, bbSize = character:GetBoundingBox()
+						local corners = {
+							bbCFrame * cfr(Vector3.new(-bbSize.X / 2, -bbSize.Y / 2, -bbSize.Z / 2)),
+							bbCFrame * cfr(Vector3.new( bbSize.X / 2, -bbSize.Y / 2, -bbSize.Z / 2)),
+							bbCFrame * cfr(Vector3.new(-bbSize.X / 2,  bbSize.Y / 2, -bbSize.Z / 2)),
+							bbCFrame * cfr(Vector3.new( bbSize.X / 2,  bbSize.Y / 2, -bbSize.Z / 2)),
+							bbCFrame * cfr(Vector3.new(-bbSize.X / 2, -bbSize.Y / 2,  bbSize.Z / 2)),
+							bbCFrame * cfr(Vector3.new( bbSize.X / 2, -bbSize.Y / 2,  bbSize.Z / 2)),
+							bbCFrame * cfr(Vector3.new(-bbSize.X / 2,  bbSize.Y / 2,  bbSize.Z / 2)),
+							bbCFrame * cfr(Vector3.new( bbSize.X / 2,  bbSize.Y / 2,  bbSize.Z / 2))
+						}
+						local minX, minY, maxX, maxY = math.huge, math.huge, -math.huge, -math.huge
+						for _, corner in corners do
+							local vp = items.camera:WorldToViewportPoint(corner.Position)
+							if vp.Z > 0 then
+								minX = math.min(minX, vp.X)
+								maxX = math.max(maxX, vp.X)
+								minY = math.min(minY, vp.Y)
+								maxY = math.max(maxY, vp.Y)
+							end
+						end
+						if maxX >= minX and maxY >= minY and maxX > -math.huge and maxY > -math.huge then
+							local boxW = math.max(maxX - minX, 10)
+							local boxH = math.max(maxY - minY, 10)
+							local boxCX = (minX + maxX) / 2
+							local boxCY = (minY + maxY) / 2
+							local containerSize = items.preview_container.AbsoluteSize
+							objects.holder.Size = dim2(0, boxW, 0, boxH)
+							objects.holder.Position = dim2(0.5, boxCX - containerSize.X / 2, 0.5, boxCY - containerSize.Y / 2)
+						end
+					end)
 				end)
 
 				items.preview_image = library:create( "ImageLabel" , {
@@ -2450,6 +2507,10 @@
 				items.preview_image.Visible = not show_character
 				character.Parent = show_character and items.viewportframe or nil
 				objects.name.Text = show_character and (lp.DisplayName .. " (" .. lp.Name .. ")") or "Aveline"
+				if not show_character then
+					objects.holder.Size = dim2(0, 150, 0, 210)
+					objects.holder.Position = dim2(0.5, 0, 0.5, 10)
+				end
 			end
 
 			self:dropdown({

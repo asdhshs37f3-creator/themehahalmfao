@@ -2037,6 +2037,21 @@
 					cfg.rotation = cfg.rotation + 0.5
 					character:SetPrimaryPartCFrame(cfr(Vector3.new(0, 1, -6)) * angle(0, math.rad(cfg.rotation), 0))
 				end)
+
+				items.preview_image = library:create( "ImageLabel" , {
+					Parent = self.holder;
+					Image = "rbxassetid://139399821337795";
+					ScaleType = Enum.ScaleType.Stretch;
+					ImageTransparency = 0;
+					Size = dim2(1, 0, 0, 220);
+					Position = dim2(0, 0, 0, 10);
+					BorderColor3 = rgb(0, 0, 0);
+					BackgroundTransparency = 1;
+					Visible = false;
+					ZIndex = 2;
+					BorderSizePixel = 0;
+					BackgroundColor3 = rgb(255, 255, 255)
+				});
 			end 
 
 			local objects = cfg.objects; do 
@@ -2409,6 +2424,22 @@
 					cfg.change_health()
 				end 
 			end)
+
+			function cfg.set_preview_mode(mode)
+				local show_character = mode == "Roblox Character"
+				items.preview_image.Visible = not show_character
+				items.viewportframe.Visible = show_character
+			end
+
+			self:dropdown({
+				name = "Mode",
+				flag = "EspPreviewMode",
+				items = {"Roblox Character", "Image"},
+				default = "Roblox Character",
+				callback = function(text)
+					cfg.set_preview_mode(text)
+				end
+			})
 
 			return setmetatable(cfg, library)
 		end

@@ -1791,7 +1791,7 @@
 				local holder = library:panel({
 					name = "Preview", 
 					anchor_point = vec2(0, 0),
-					size = dim2(0, 340, 0, 380),
+					size = dim2(0, 300, 0, 325),
 					position = dim2(0, style.items.main_holder.AbsolutePosition.X, 0, style.items.main_holder.AbsolutePosition.Y + style.items.main_holder.AbsoluteSize.Y + 2),
 					image = "rbxassetid://77684377836328",
 				})  
@@ -2006,28 +2006,14 @@
 			local character = lp.Character:Clone()
 			character.Animate:Destroy()
 
-			-- Preview mode: 3D character (default) or 2D image
-			local preview_image_id = "rbxassetid://139399821337795"
-			local preview_mode = "Character"
-
 			local items = cfg.items; do 
-				items.preview_container = library:create( "Frame" , {
+				items.viewportframe = library:create( "ViewportFrame" , {
 					Parent = self.holder;
 					BackgroundTransparency = 1;
-					Size = dim2(1, 0, 0, 260);
-					LayoutOrder = 1;
+					Size = dim2(1, 0, 0, 220);
 					BorderColor3 = rgb(0, 0, 0);
 					ZIndex = 1;
-					BorderSizePixel = 0;
-					BackgroundColor3 = rgb(255, 255, 255)
-				});
-
-				items.viewportframe = library:create( "ViewportFrame" , {
-					Parent = items.preview_container;
-					BackgroundTransparency = 1;
-					Size = dim2(1, 0, 1, 0);
-					BorderColor3 = rgb(0, 0, 0);
-					ZIndex = 1;
+					Position = dim2(0, 0, 0, 10);
 					BorderSizePixel = 0;
 					BackgroundColor3 = rgb(255, 255, 255)
 				});
@@ -2048,96 +2034,19 @@
 
 				library:connection(run.RenderStepped, function()
 					task.wait()
-
-					pcall(function()
-						local weapon_tool = lp.Character and lp.Character:FindFirstChildOfClass("Tool")
-						objects.weapon.Text = weapon_tool and weapon_tool.Name or "none"
-
-						local lpHRP = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
-						local nearest_dist = math.huge
-						if lpHRP then
-							for _, plr in players:GetPlayers() do
-								if plr ~= lp and plr.Character then
-									local plrHRP = plr.Character:FindFirstChild("HumanoidRootPart")
-									if plrHRP then
-										local dist = (plrHRP.Position - lpHRP.Position).Magnitude
-										if dist < nearest_dist then
-											nearest_dist = dist
-										end
-									end
-								end
-							end
-						end
-						objects.distance.Text = nearest_dist ~= math.huge and (math.floor(nearest_dist / 3.5714285714) .. "m") or "0m"
-					end)
-
-					if preview_mode ~= "Character" then
-						return
-					end
 					cfg.rotation = cfg.rotation + 0.5
 					character:SetPrimaryPartCFrame(cfr(Vector3.new(0, 1, -6)) * angle(0, math.rad(cfg.rotation), 0))
-
-					-- fit the esp box around the rendered character
-					pcall(function()
-						local bbCFrame, bbSize = character:GetBoundingBox()
-						local corners = {
-							bbCFrame * cfr(Vector3.new(-bbSize.X / 2, -bbSize.Y / 2, -bbSize.Z / 2)),
-							bbCFrame * cfr(Vector3.new( bbSize.X / 2, -bbSize.Y / 2, -bbSize.Z / 2)),
-							bbCFrame * cfr(Vector3.new(-bbSize.X / 2,  bbSize.Y / 2, -bbSize.Z / 2)),
-							bbCFrame * cfr(Vector3.new( bbSize.X / 2,  bbSize.Y / 2, -bbSize.Z / 2)),
-							bbCFrame * cfr(Vector3.new(-bbSize.X / 2, -bbSize.Y / 2,  bbSize.Z / 2)),
-							bbCFrame * cfr(Vector3.new( bbSize.X / 2, -bbSize.Y / 2,  bbSize.Z / 2)),
-							bbCFrame * cfr(Vector3.new(-bbSize.X / 2,  bbSize.Y / 2,  bbSize.Z / 2)),
-							bbCFrame * cfr(Vector3.new( bbSize.X / 2,  bbSize.Y / 2,  bbSize.Z / 2))
-						}
-						local minX, minY, maxX, maxY = math.huge, math.huge, -math.huge, -math.huge
-						for _, corner in corners do
-							local vp = items.camera:WorldToViewportPoint(corner.Position)
-							if vp.Z > 0 then
-								minX = math.min(minX, vp.X)
-								maxX = math.max(maxX, vp.X)
-								minY = math.min(minY, vp.Y)
-								maxY = math.max(maxY, vp.Y)
-							end
-						end
-						if maxX >= minX and maxY >= minY and maxX > -math.huge and maxY > -math.huge then
-							local boxW = math.max(maxX - minX, 10)
-							local boxH = math.max(maxY - minY, 10)
-							local boxCX = (minX + maxX) / 2
-							local boxCY = (minY + maxY) / 2
-							local containerSize = items.preview_container.AbsoluteSize
-							objects.holder.Size = dim2(0, boxW, 0, boxH)
-							objects.holder.Position = dim2(0.5, boxCX - containerSize.X / 2, 0.5, boxCY - containerSize.Y / 2)
-						end
-					end)
 				end)
-
-				items.preview_image = library:create( "ImageLabel" , {
-					Parent = items.preview_container;
-					Image = preview_image_id;
-					ScaleType = Enum.ScaleType.Stretch;
-					ImageTransparency = 0;
-					Size = dim2(1, -10, 1, -10);
-					Position = dim2(0.5, 0, 0.5, 10);
-					AnchorPoint = vec2(0.5, 0.5);
-					BorderColor3 = rgb(0, 0, 0);
-					BackgroundTransparency = 1;
-					Visible = false;
-					ZIndex = 2;
-					BorderSizePixel = 0;
-					BackgroundColor3 = rgb(255, 255, 255)
-				});
 			end 
 
 			local objects = cfg.objects; do 
 				objects[ "holder" ] = library:create( "Frame" , {
-					Parent = items.preview_container;
+					Parent = items.viewportframe;
 					Name = "\0";
 					BackgroundTransparency = 1;
-					ZIndex = 3;
 					Position = dim2(0.5, 0, 0.5, 10);
 					BorderColor3 = rgb(0, 0, 0);
-					Size = dim2(0, 150, 0, 210);
+					Size = dim2(0, 135, 0, 190);
 					BorderSizePixel = 0;
 					AnchorPoint = vec2(0.5, 0.5);
 					BackgroundColor3 = rgb(255, 255, 255)
@@ -2153,13 +2062,13 @@
 					Parent = library.cache;
 					TextColor3 = flags["Name_Color"].Color;
 					BorderColor3 = rgb(0, 0, 0);
-					Text = lp.DisplayName .. " (" .. lp.Name .. ")";
+					Text = string.format("%s (@%s)", lp.DisplayName, lp.Name);
 					Name = "\0";
 					TextStrokeTransparency = 0;
 					AnchorPoint = vec2(0, 1);
 					Size = dim2(1, 0, 0, 0);
 					BackgroundTransparency = 1;
-					Position = dim2(0, 0, 0, -18);
+					Position = dim2(0, 0, 0, -5);
 					BorderSizePixel = 0;
 					AutomaticSize = Enum.AutomaticSize.Y;
 					TextSize = 12;
@@ -2449,7 +2358,7 @@
 			end -- wtf why diff func defining
 
 			function cfg.refresh_elements( )                                
-				objects.holder.Parent = flags["Enabled"] and items.preview_container or library.cache
+				objects.holder.Parent = flags["Enabled"] and items.viewportframe or library.cache
 
 				local temp = {
 					["Names"] = objects["name"]; 
@@ -2500,54 +2409,6 @@
 					cfg.change_health()
 				end 
 			end)
-
-			function cfg.set_preview_mode(mode)
-				preview_mode = mode
-				local show_character = preview_mode == "Character"
-				items.preview_image.Visible = not show_character
-				character.Parent = show_character and items.viewportframe or nil
-				objects.name.Text = show_character and (lp.DisplayName .. " (" .. lp.Name .. ")") or "Aveline"
-				if not show_character then
-					objects.holder.Size = dim2(0, 150, 0, 210)
-					objects.holder.Position = dim2(0.5, 0, 0.5, 10)
-				end
-			end
-
-			self:dropdown({
-				name = "Mode",
-				flag = "EspPreviewMode",
-				items = {"Character", "Aveline"},
-				default = "Character",
-				callback = function(text)
-					cfg.set_preview_mode(text)
-				end
-			})
-
-			-- move the dropdown down a bit so weapon/distance fit
-				items.spacer = library:create( "Frame" , {
-					Parent = self.holder;
-					BackgroundTransparency = 1;
-					Size = dim2(1, 0, 0, 18);
-					LayoutOrder = 2;
-					BorderColor3 = rgb(0, 0, 0);
-					BorderSizePixel = 0;
-					BackgroundColor3 = rgb(255, 255, 255)
-				});
-
-				for _, child in self.holder:GetChildren() do
-					if child.Name == "dropdown" then
-						child.LayoutOrder = 3
-					end
-				end
-
-				local scroll_frame = self.holder.Parent
-				if scroll_frame then
-					for _, child in scroll_frame:GetChildren() do
-						if child.ClassName == "UIPadding" then
-							child.PaddingBottom = dim(0, 0)
-						end
-					end
-				end
 
 			return setmetatable(cfg, library)
 		end
@@ -5766,7 +5627,7 @@
 				TextLabel.Text = text 
 			end 
 						
-			return setmetatable(cfg, library)
+			return setmetatable(cfg, library)   
 		end 
 
 		function library:playerlist(options) 

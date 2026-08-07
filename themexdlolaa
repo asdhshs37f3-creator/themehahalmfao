@@ -6067,7 +6067,8 @@
 				Name = "",
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
-				Size = dim2(1, 0, 0, 84),
+				Size = dim2(1, 0, 0, 58),
+				Visible = false,
 			})
 
 			local detail_avatar = library:create("ImageLabel", {
@@ -6139,95 +6140,17 @@
 				BackgroundColor3 = rgb(255, 255, 255)
 			})
 
-			local function detailButton(text, xpos, width)
-				local btn = library:create("TextButton", {
-					Parent = detail_frame,
-					Name = "",
-					FontFace = library.font,
-					Text = text,
-					TextColor3 = themes.preset.accent,
-					TextSize = 10,
-					BorderColor3 = rgb(0, 0, 0),
-					BorderSizePixel = 0,
-					Position = dim2(0, xpos, 0, 56),
-					Size = dim2(0, width, 0, 20),
-					BackgroundColor3 = themes.preset.low_contrast
-				})
-				library:apply_theme(btn, "accent", "TextColor3")
-				library:create("UIStroke", {
-					Parent = btn,
-					Color = themes.preset.outline,
-					Thickness = 1,
-				})
-				library:create("UICorner", {
-					Parent = btn,
-					CornerRadius = UDim.new(0, 3),
-				})
-				return btn
-			end
-			local detail_teleport = detailButton("Teleport", 0, 44)
-			local detail_spectate = detailButton("Spectate", 48, 48)
-
 			show_player_detail = function(pName)
 				detail_current = pName
 				local pObj = players:FindFirstChild(pName)
+				detail_frame.Visible = true
 				detail_name.Text = pObj and pObj.Name or pName
 				detail_display.Text = "DisplayName: " .. (pObj and pObj.DisplayName or pName)
 				detail_uid.Text = "User Id: " .. (pObj and pObj.UserId or "?")
 				if pObj then
-					task.spawn(function()
-						local ok, thumb = pcall(function()
-							return players:GetUserThumbnailAsync(pObj.UserId, Enum.ThumbnailType.AvatarBust, Enum.ThumbnailSize.Size48)
-						end)
-						if ok and thumb and detail_avatar and detail_avatar.Parent then
-							detail_avatar.Image = thumb
-						end
-					end)
+					detail_avatar.Image = string.format("rbxthumb://type=AvatarBust&id=%d&w=48&h=48&format=Png", pObj.UserId)
 				end
 			end
-
-			detail_teleport.MouseButton1Click:Connect(function()
-				if not detail_current then
-					library:notification({text = "No player selected", time = 2})
-					return
-				end
-				local target = players:FindFirstChild(detail_current)
-				local myChar = lp.Character
-				local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
-				local targetHRP = target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
-				if myHRP and targetHRP then
-					myHRP.CFrame = targetHRP.CFrame + Vector3.new(0, 3, 0)
-					library:notification({text = "Teleported to " .. detail_current, time = 2})
-				else
-					library:notification({text = "Could not teleport", time = 2})
-				end
-			end)
-
-			detail_spectate.MouseButton1Click:Connect(function()
-				if not detail_current then
-					library:notification({text = "No player selected", time = 2})
-					return
-				end
-				if library.spectate_target == detail_current then
-					library.spectate_target = nil
-					local myChar = lp.Character
-					local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
-					if myHum then
-						ws.CurrentCamera.CameraSubject = myHum
-					end
-					library:notification({text = "Stopped spectating", time = 2})
-				else
-					local target = players:FindFirstChild(detail_current)
-					local targetHum = target and target.Character and target.Character:FindFirstChildOfClass("Humanoid")
-					if targetHum then
-						library.spectate_target = detail_current
-						ws.CurrentCamera.CameraSubject = targetHum
-						library:notification({text = "Spectating " .. detail_current, time = 2})
-					else
-						library:notification({text = detail_current .. " has no humanoid", time = 2})
-					end
-				end
-			end)
 
 			return setmetatable(cfg, library)
 		end 

@@ -5793,7 +5793,7 @@
 					Parent = playerlist_holder,
 					Name = "",
 					BorderColor3 = rgb(0, 0, 0),
-					Size = dim2(1, 26, 1, 0),
+					Size = dim2(1, 26, 0, 0),
 					BorderSizePixel = 0,
 					BackgroundColor3 = rgb(255, 255, 255)
 				})
@@ -5810,7 +5810,7 @@
 					Name = "",
 					Position = dim2(0, 0, 0, 2),
 					BorderColor3 = rgb(0, 0, 0),
-					Size = dim2(1, -27, 1, -2),
+					Size = dim2(1, -27, 0, 250),
 					BorderSizePixel = 0,
 					BackgroundColor3 = themes.preset.outline
 				}) library:apply_theme(list, "outline", "BackgroundColor3") 
@@ -6133,15 +6133,53 @@
 			local detail_row = library:create("Frame", {
 				Parent = self.holder,
 				Name = "",
-				BackgroundTransparency = 1,
-				BorderSizePixel = 0,
-				Size = dim2(1, -8, 0, 58),
-			})
+				BorderColor3 = rgb(0, 0, 0),
+				Size = dim2(1, -8, 0, 66),
+				BackgroundColor3 = themes.preset.outline
+			}) library:apply_theme(detail_row, "outline", "BackgroundColor3")
 
-			detail_avatar = library:create("ImageLabel", {
+			local detail_inline = library:create("Frame", {
 				Parent = detail_row,
 				Name = "",
-				Position = dim2(0, 2, 0, 2),
+				Position = dim2(0, 1, 0, 1),
+				BorderColor3 = rgb(0, 0, 0),
+				Size = dim2(1, -2, 1, -2),
+				BorderSizePixel = 0,
+				BackgroundColor3 = themes.preset.inline
+			}) library:apply_theme(detail_inline, "inline", "BackgroundColor3")
+
+			local detail_bg = library:create("Frame", {
+				Parent = detail_inline,
+				Name = "",
+				Position = dim2(0, 1, 0, 1),
+				BorderColor3 = rgb(0, 0, 0),
+				Size = dim2(1, -2, 1, -2),
+				BorderSizePixel = 0,
+				BackgroundColor3 = rgb(255, 255, 255)
+			})
+
+			local detail_contrast = library:create("Frame", {
+				Parent = detail_bg,
+				Name = "",
+				BorderColor3 = rgb(0, 0, 0),
+				Size = dim2(1, 0, 1, 0),
+				BorderSizePixel = 0,
+				BackgroundColor3 = rgb(255, 255, 255)
+			})
+
+			library:create("UIGradient", {
+				Parent = detail_contrast,
+				Rotation = 90,
+				Color = rgbseq{
+					rgbkey(0, rgb(41, 41, 55)),
+					rgbkey(1, rgb(35, 35, 47))
+				}
+			}) library:apply_theme(detail_contrast, "contrast", "Color")
+
+			detail_avatar = library:create("ImageLabel", {
+				Parent = detail_contrast,
+				Name = "",
+				Position = dim2(0, 4, 0, 4),
 				Size = dim2(0, 40, 0, 40),
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
@@ -6150,15 +6188,15 @@
 			})
 
 			local detail_name = library:create("TextLabel", {
-				Parent = detail_row,
+				Parent = detail_contrast,
 				FontFace = library.font,
 				TextColor3 = themes.preset.text,
 				BorderColor3 = rgb(0, 0, 0),
 				Text = "User: ??",
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
-				Position = dim2(0, 48, 0, 0),
-				Size = dim2(1, -48, 0, 16),
+				Position = dim2(0, 50, 0, 6),
+				Size = dim2(1, -54, 0, 16),
 				TextXAlignment = Enum.TextXAlignment.Left,
 				TextTruncate = Enum.TextTruncate.AtEnd,
 				TextSize = 12,
@@ -6167,15 +6205,15 @@
 			library:apply_theme(detail_name, "text", "TextColor3")
 
 			local detail_display = library:create("TextLabel", {
-				Parent = detail_row,
+				Parent = detail_contrast,
 				FontFace = library.font,
 				TextColor3 = themes.preset.text,
 				BorderColor3 = rgb(0, 0, 0),
 				Text = "Display: ??",
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
-				Position = dim2(0, 48, 0, 18),
-				Size = dim2(1, -48, 0, 16),
+				Position = dim2(0, 50, 0, 24),
+				Size = dim2(1, -54, 0, 16),
 				TextXAlignment = Enum.TextXAlignment.Left,
 				TextTruncate = Enum.TextTruncate.AtEnd,
 				TextSize = 12,
@@ -6184,15 +6222,15 @@
 			library:apply_theme(detail_display, "text", "TextColor3")
 
 			local detail_uid = library:create("TextLabel", {
-				Parent = detail_row,
+				Parent = detail_contrast,
 				FontFace = library.font,
 				TextColor3 = themes.preset.text,
 				BorderColor3 = rgb(0, 0, 0),
 				Text = "User Id: ??",
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
-				Position = dim2(0, 48, 0, 36),
-				Size = dim2(1, -48, 0, 16),
+				Position = dim2(0, 50, 0, 42),
+				Size = dim2(1, -54, 0, 16),
 				TextXAlignment = Enum.TextXAlignment.Left,
 				TextTruncate = Enum.TextTruncate.AtEnd,
 				TextSize = 12,
@@ -6203,24 +6241,6 @@
 			cfg.labels.name = { set = function(t) detail_name.Text = t end }
 			cfg.labels.display = { set = function(t) detail_display.Text = t end }
 			cfg.labels.uid = { set = function(t) detail_uid.Text = t end }
-
-			task.spawn(function()
-				task.wait()
-				task.wait()
-				pcall(function()
-					local sf = self.holder.Parent
-					if not sf then return end
-					local avail = sf.AbsoluteSize.Y - 30
-					local used = 0
-					for _, child in ipairs(self.holder:GetChildren()) do
-						if child.Visible and child ~= playerlist_holder then
-							used = used + child.AbsoluteSize.Y
-						end
-					end
-					playerlist_holder.AutomaticSize = Enum.AutomaticSize.None
-					playerlist_holder.Size = dim2(1, -8, 0, math.max(60, avail - used))
-				end)
-			end)
 
 			return setmetatable(cfg, library)
 		end 

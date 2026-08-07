@@ -6136,6 +6136,8 @@
 				local ok, player_object = pcall(cfg.create_player, player)
 				if ok and player_object then
 					insert(library.playerlist_data, player_object)
+				else
+					print("[glitterhook] create_player error: " .. tostring(player_object))
 				end
 			end 
 

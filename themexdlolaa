@@ -1787,7 +1787,7 @@
 				local items = holder.items
 
 				local column = setmetatable(items, library):column() 
-				local section = column:section({name = ""})
+				local section = column:section({name = "Playerlist"})
 				local playerlist = section:playerlist({})
 				if not getgenv().Whitelist then getgenv().Whitelist = {} end
 
@@ -5793,7 +5793,7 @@
 					Parent = playerlist_holder,
 					Name = "",
 					BorderColor3 = rgb(0, 0, 0),
-					Size = dim2(1, 26, 0, 0),
+					Size = dim2(1, 26, 1, 0),
 					BorderSizePixel = 0,
 					BackgroundColor3 = rgb(255, 255, 255)
 				})
@@ -5810,7 +5810,7 @@
 					Name = "",
 					Position = dim2(0, 0, 0, 2),
 					BorderColor3 = rgb(0, 0, 0),
-					Size = dim2(1, -27, 1, 232),
+					Size = dim2(1, -27, 1, -2),
 					BorderSizePixel = 0,
 					BackgroundColor3 = themes.preset.outline
 				}) library:apply_theme(list, "outline", "BackgroundColor3") 
@@ -6129,13 +6129,13 @@
 				insert(library.playerlist_data, player_object)
 			end 
 
-			-- selected player detail (old style labels + square avatar)
+			-- selected player detail (avatar left, labels right)
 			local detail_row = library:create("Frame", {
 				Parent = self.holder,
 				Name = "",
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
-				Size = dim2(1, -8, 0, 44),
+				Size = dim2(1, -8, 0, 58),
 			})
 
 			detail_avatar = library:create("ImageLabel", {
@@ -6149,9 +6149,78 @@
 				Visible = false,
 			})
 
-			cfg.labels.name = self:label({name = "User: ??"})
-			cfg.labels.display = self:label({name = "Display: ??"})
-			cfg.labels.uid = self:label({name = "User Id: ??"})
+			local detail_name = library:create("TextLabel", {
+				Parent = detail_row,
+				FontFace = library.font,
+				TextColor3 = themes.preset.text,
+				BorderColor3 = rgb(0, 0, 0),
+				Text = "User: ??",
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Position = dim2(0, 48, 0, 0),
+				Size = dim2(1, -48, 0, 16),
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextTruncate = Enum.TextTruncate.AtEnd,
+				TextSize = 12,
+				BackgroundColor3 = rgb(255, 255, 255)
+			})
+			library:apply_theme(detail_name, "text", "TextColor3")
+
+			local detail_display = library:create("TextLabel", {
+				Parent = detail_row,
+				FontFace = library.font,
+				TextColor3 = themes.preset.text,
+				BorderColor3 = rgb(0, 0, 0),
+				Text = "Display: ??",
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Position = dim2(0, 48, 0, 18),
+				Size = dim2(1, -48, 0, 16),
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextTruncate = Enum.TextTruncate.AtEnd,
+				TextSize = 12,
+				BackgroundColor3 = rgb(255, 255, 255)
+			})
+			library:apply_theme(detail_display, "text", "TextColor3")
+
+			local detail_uid = library:create("TextLabel", {
+				Parent = detail_row,
+				FontFace = library.font,
+				TextColor3 = themes.preset.text,
+				BorderColor3 = rgb(0, 0, 0),
+				Text = "User Id: ??",
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Position = dim2(0, 48, 0, 36),
+				Size = dim2(1, -48, 0, 16),
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextTruncate = Enum.TextTruncate.AtEnd,
+				TextSize = 12,
+				BackgroundColor3 = rgb(255, 255, 255)
+			})
+			library:apply_theme(detail_uid, "text", "TextColor3")
+
+			cfg.labels.name = { set = function(t) detail_name.Text = t end }
+			cfg.labels.display = { set = function(t) detail_display.Text = t end }
+			cfg.labels.uid = { set = function(t) detail_uid.Text = t end }
+
+			task.spawn(function()
+				task.wait()
+				task.wait()
+				pcall(function()
+					local sf = self.holder.Parent
+					if not sf then return end
+					local avail = sf.AbsoluteSize.Y - 30
+					local used = 0
+					for _, child in ipairs(self.holder:GetChildren()) do
+						if child.Visible and child ~= playerlist_holder then
+							used = used + child.AbsoluteSize.Y
+						end
+					end
+					playerlist_holder.AutomaticSize = Enum.AutomaticSize.None
+					playerlist_holder.Size = dim2(1, -8, 0, math.max(60, avail - used))
+				end)
+			end)
 
 			return setmetatable(cfg, library)
 		end 

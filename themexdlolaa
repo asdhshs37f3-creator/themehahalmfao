@@ -5762,17 +5762,26 @@
 			})
 
 			panel.items.main_holder.ClipsDescendants = true
-			library:create("UICorner", {
-				Parent = panel.items.main_holder,
-				CornerRadius = UDim.new(1, 0),
-			})
+			for _, frame in ipairs({
+				panel.items.main_holder,
+				panel.items.window_inline,
+				panel.items.window_holder,
+				panel.items.outline,
+				panel.items.inline,
+				panel.items.holder,
+			}) do
+				library:create("UICorner", {
+					Parent = frame,
+					CornerRadius = UDim.new(1, 0),
+				})
+			end
 			panel.items.outline.BackgroundTransparency = 1
 			panel.items.inline.BackgroundTransparency = 1
 			panel.items.holder.BackgroundTransparency = 1
 			panel.items.glow.Visible = false
 			panel.items.button.Visible = false
 			panel.items.text.AnchorPoint = vec2(0, 0)
-			panel.items.text.Position = dim2(0, 10, 0, 6)
+			panel.items.text.Position = dim2(0, 5, 0, 6)
 			panel.items.text.TextXAlignment = Enum.TextXAlignment.Left
 			library:connection(run.RenderStepped, function()
 				local size = panel.items.main_holder.Size

@@ -1776,6 +1776,7 @@
 			--  
 
 			-- playerlist 
+				local playerlist_ok, playerlist_err = pcall(function()
 				local holder = library:panel({
 					name = "Playerlist", 
 					anchor_point = vec2(0, 0),
@@ -1860,6 +1861,10 @@
 							end
 						end
 					end})
+				end
+				end)
+				if not playerlist_ok then
+					print("[glitterhook] playerlist panel error: " .. tostring(playerlist_err))
 				end
 			--  
 
@@ -5755,7 +5760,7 @@
 			}
 
 			self:textbox({name = "Search", callback = function(txt)
-				cfg.search(txt)
+				pcall(function() cfg.search(txt) end)
 			end})
 
 			-- elements 
@@ -6031,7 +6036,6 @@
 					player_name.TextColor3 = themes.preset.accent 
 
 					library.selected_player = player_name.Text
-					library.config_flags["PLAYERLIST_DROPDOWN"](path.priority_text.Text)
 
 					local pObj = players:FindFirstChild(player_name.Text)
 					if cfg.labels.name then 
@@ -6043,6 +6047,10 @@
 						detail_avatar.Image = string.format("rbxthumb://type=AvatarBust&id=%d&w=48&h=48&format=Png", pObj.UserId)
 						detail_avatar.Visible = true
 					end
+
+					pcall(function()
+						library.config_flags["PLAYERLIST_DROPDOWN"](path.priority_text.Text)
+					end)
 				end)
 
 				task.spawn(function()
@@ -6121,12 +6129,14 @@
 				end 
 			end 
 
-			players.PlayerAdded:Connect(cfg.create_player)
+			players.PlayerAdded:Connect(function(p) pcall(cfg.create_player, p) end)
 			players.PlayerRemoving:Connect(cfg.remove_player)
 			
 			for _, player in players:GetPlayers() do 
-				local player_object = cfg.create_player(player.Name)
-				insert(library.playerlist_data, player_object)
+				local ok, player_object = pcall(cfg.create_player, player)
+				if ok and player_object then
+					insert(library.playerlist_data, player_object)
+				end
 			end 
 
 			-- selected player detail (avatar left, labels right)

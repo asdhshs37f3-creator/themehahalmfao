@@ -677,10 +677,37 @@
 						BorderSizePixel = 0,
 						BackgroundColor3 = themes.preset.outline
 					})
-					if options.draggable ~= false then
-						library:draggify(items.main_holder)
-						library:make_resizable(items.main_holder)
-					end
+					library:draggify(items.main_holder)
+					library:make_resizable(items.main_holder)
+
+					local Close = library:create( "TextButton" , {
+						Parent = items.main_holder;
+						FontFace = library.font;
+						Name = "\0";
+						AnchorPoint = vec2(1, 0);
+						Active = false;
+						BorderColor3 = rgb(0, 0, 0);
+						Text = "X";
+						Size = dim2(0, 0, 0, 0);
+						Selectable = false;
+						Position = dim2(1, -7, 0, 5);
+						BorderSizePixel = 0;
+						BackgroundTransparency = 1;
+						TextXAlignment = Enum.TextXAlignment.Right;
+						AutomaticSize = Enum.AutomaticSize.XY;
+						TextColor3 = themes.preset.text;
+						TextSize = 12;
+						ZIndex = 100;
+						BackgroundColor3 = rgb(255, 255, 255)
+					});
+
+					library:create( "UIStroke" , {
+						Parent = Close
+					});         
+					
+					Close.MouseButton1Click:Connect(function()
+						items.sgui.Enabled = false;
+					end)
 
 					--library:apply_theme(main_holder, "outline", "BackgroundColor3") 
 					
@@ -1787,7 +1814,7 @@
 				local items = holder.items
 
 				local column = setmetatable(items, library):column() 
-				local section = column:section({name = ""})
+				local section = column:section({name = "Playerlist"})
 				local playerlist = section:playerlist({})
 				if not getgenv().Whitelist then getgenv().Whitelist = {} end
 
@@ -5603,135 +5630,6 @@
 			return setmetatable(cfg, library)   
 		end 
 
-		function library:radar(options)
-			local cfg = {
-				flag = options.flag or tostring(random(1,9999999)),
-				visible = options.visible or true,
-				size = options.size or 200,
-				frame = nil,
-				selfDot = nil,
-			}
-
-			local parent = options.holder or self.holder
-
-			local frame = library:create("Frame", {
-				Parent = parent,
-				Name = "Radar",
-				Size = dim2(0, cfg.size, 0, cfg.size),
-				Position = dim2(0.5, 0, 0.5, 0),
-				AnchorPoint = vec2(0.5, 0.5),
-				BackgroundTransparency = 1,
-				BorderSizePixel = 0,
-				ClipsDescendants = true,
-				ZIndex = 5,
-				Visible = cfg.visible,
-			})
-			cfg.frame = frame
-
-			library:create("UICorner", {
-				Parent = frame,
-				CornerRadius = UDim.new(1, 0),
-			})
-
-			local function makeLine(sizeX, sizeY)
-				library:create("Frame", {
-					Parent = frame,
-					Size = dim2(sizeX, 0, sizeY, 0),
-					AnchorPoint = vec2(0.5, 0.5),
-					Position = dim2(0.5, 0, 0.5, 0),
-					BackgroundColor3 = themes.preset.text,
-					BackgroundTransparency = 0.55,
-					BorderSizePixel = 0,
-				})
-			end
-			makeLine(0.5, 0.002)
-			makeLine(0.002, 0.5)
-
-			local selfDot = library:create("Frame", {
-				Parent = frame,
-				Name = "Self",
-				Size = dim2(0, 5, 0, 5),
-				AnchorPoint = vec2(0.5, 0.5),
-				Position = dim2(0.5, 0, 0.5, 0),
-				BackgroundColor3 = themes.preset.accent,
-				BorderSizePixel = 0,
-			})
-			library:create("UICorner", {
-				Parent = selfDot,
-				CornerRadius = UDim.new(1, 0),
-			})
-			cfg.selfDot = selfDot
-
-			function cfg.set_size(size)
-				frame.Size = dim2(0, size, 0, size)
-			end
-
-			function cfg.set_element_visible(bool)
-				frame.Visible = bool
-			end
-
-			cfg.set_element_visible(cfg.visible)
-
-			library.visible_flags[cfg.flag] = cfg.set_element_visible
-
-			return setmetatable(cfg, library)
-		end 
-
-		function library:radarpanel(options)
-			local panel = self:panel({
-				name = options.name or "Radar",
-				size = options.size or dim2(0, 280, 0, 280),
-				position = options.position or dim2(0, 500, 0, 500),
-				draggable = false,
-			})
-
-			panel.items.main_holder.ClipsDescendants = true
-			for _, frame in ipairs({
-				panel.items.main_holder,
-				panel.items.window_inline,
-				panel.items.window_holder,
-				panel.items.outline,
-				panel.items.inline,
-				panel.items.holder,
-			}) do
-				library:create("UICorner", {
-					Parent = frame,
-					CornerRadius = UDim.new(1, 0),
-				})
-			end
-			panel.items.outline.BackgroundTransparency = 1
-			panel.items.inline.BackgroundTransparency = 1
-			panel.items.holder.BackgroundTransparency = 1
-			panel.items.glow.Visible = false
-			panel.items.button.Visible = false
-			panel.items.text.Visible = false
-			library:connection(run.RenderStepped, function()
-				local size = panel.items.main_holder.Size
-				if size.X.Offset ~= size.Y.Offset then
-					panel.items.main_holder.Size = dim2(size.X.Scale, size.X.Offset, size.X.Scale, size.X.Offset)
-				end
-			end)
-
-			local radar = self:radar({
-				holder = panel.items.holder,
-				flag = options.flag or "Radar_Element",
-				size = options.radar_size or 246,
-				visible = false,
-			})
-
-			local function set_visible(bool)
-				panel.items.sgui.Enabled = bool
-			end
-
-			radar.set_panel_visible = set_visible
-			radar.panel = panel
-
-			set_visible(radar.visible)
-
-			return radar
-		end 
-
-
 		function library:playerlist(options) 
 			local cfg = {
 				callback = options.callback or function() end, 
@@ -5744,7 +5642,6 @@
 			}
 
 			local selected_button; 
-			local detail_avatar; 
 
 			local patterns = {
 				["Priority"] = rgb(255, 255, 0),
@@ -5753,10 +5650,6 @@
 				["Friendly"] = rgb(0, 255, 255),
 				["Whitelisted"] = rgb(0, 255, 0)
 			}
-
-			self:textbox({name = "Search", callback = function(txt)
-				cfg.search(txt)
-			end})
 
 			-- elements 
 				local playerlist_holder = library:create("TextLabel", {
@@ -6033,24 +5926,10 @@
 					library.selected_player = player_name.Text
 					library.config_flags["PLAYERLIST_DROPDOWN"](path.priority_text.Text)
 
-					local pObj = players:FindFirstChild(player_name.Text)
 					if cfg.labels.name then 
 						cfg.labels.name.set("User: " .. player_name.Text)
-						cfg.labels.display.set("Display: " .. (pObj and pObj.DisplayName or player_name.Text))
-						cfg.labels.uid.set("User Id: " .. (pObj and pObj.UserId or "?"))
-					end
-					if pObj then
-						detail_avatar.Image = string.format("rbxthumb://type=AvatarBust&id=%d&w=48&h=48&format=Png", pObj.UserId)
-						detail_avatar.Visible = true
-					end
-				end)
-
-				task.spawn(function()
-					local pObj = players:FindFirstChild(tostring(player))
-					if pObj then
-						pcall(function()
-							game:GetService("ContentProvider"):PreloadAsync({string.format("rbxthumb://type=AvatarBust&id=%d&w=48&h=48&format=Png", pObj.UserId)})
-						end)
+						cfg.labels.display.set("DisplayName: " .. players[player_name.Text].DisplayName)
+						cfg.labels.uid.set("User Id: " .. players[player_name.Text].UserId)
 					end
 				end)
 
@@ -6129,28 +6008,11 @@
 				insert(library.playerlist_data, player_object)
 			end 
 
-			-- selected player detail (old style labels + square avatar)
-			local detail_row = library:create("Frame", {
-				Parent = self.holder,
-				Name = "",
-				BackgroundTransparency = 1,
-				BorderSizePixel = 0,
-				Size = dim2(1, -8, 0, 44),
-			})
-
-			detail_avatar = library:create("ImageLabel", {
-				Parent = detail_row,
-				Name = "",
-				Position = dim2(0, 2, 0, 2),
-				Size = dim2(0, 40, 0, 40),
-				BackgroundTransparency = 1,
-				BorderSizePixel = 0,
-				BackgroundColor3 = themes.preset.inline,
-				Visible = false,
-			})
-
-			cfg.labels.name = self:label({name = "User: ??"})
-			cfg.labels.display = self:label({name = "Display: ??"})
+			self:textbox({name = "Search", callback = function(txt)
+				cfg.search(txt)
+			end})
+			cfg.labels.name = self:label({name = "Name: ??"})
+			cfg.labels.display = self:label({name = "Display Name: ??"})
 			cfg.labels.uid = self:label({name = "User Id: ??"})
 
 			return setmetatable(cfg, library)

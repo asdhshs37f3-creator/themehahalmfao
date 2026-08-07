@@ -5630,6 +5630,122 @@
 			return setmetatable(cfg, library)   
 		end 
 
+		function library:radar(options)
+			local cfg = {
+				flag = options.flag or tostring(random(1,9999999)),
+				visible = options.visible or true,
+				size = options.size or 200,
+				frame = nil,
+				gradient = nil,
+				selfDot = nil,
+			}
+
+			local parent = options.holder or self.holder
+
+			local frame = library:create("Frame", {
+				Parent = parent,
+				Name = "Radar",
+				Size = dim2(0, cfg.size, 0, cfg.size),
+				Position = dim2(0.5, 0, 0.5, 0),
+				AnchorPoint = vec2(0.5, 0.5),
+				BackgroundColor3 = themes.preset.low_contrast,
+				BackgroundTransparency = 0.4,
+				BorderSizePixel = 0,
+				ClipsDescendants = true,
+				ZIndex = 5,
+				Visible = cfg.visible,
+			})
+			cfg.frame = frame
+
+			library:create("UICorner", {
+				Parent = frame,
+				CornerRadius = UDim.new(1, 0),
+			})
+
+			local gradient = library:create("UIGradient", {
+				Parent = frame,
+				Rotation = 90,
+				Color = ColorSequence.new(themes.preset.high_contrast, themes.preset.low_contrast),
+			})
+			cfg.gradient = gradient
+
+			library:create("UIStroke", {
+				Parent = frame,
+				Color = themes.preset.outline,
+				Thickness = 1.5,
+				Transparency = 0.5,
+			})
+
+			local function makeLine(sizeX, sizeY)
+				library:create("Frame", {
+					Parent = frame,
+					Size = dim2(sizeX, 0, sizeY, 0),
+					AnchorPoint = vec2(0.5, 0.5),
+					Position = dim2(0.5, 0, 0.5, 0),
+					BackgroundColor3 = themes.preset.text,
+					BackgroundTransparency = 0.55,
+					BorderSizePixel = 0,
+				})
+			end
+			makeLine(0.5, 0.002)
+			makeLine(0.002, 0.5)
+
+			local selfDot = library:create("Frame", {
+				Parent = frame,
+				Name = "Self",
+				Size = dim2(0, 5, 0, 5),
+				AnchorPoint = vec2(0.5, 0.5),
+				Position = dim2(0.5, 0, 0.5, 0),
+				BackgroundColor3 = themes.preset.accent,
+				BorderSizePixel = 0,
+			})
+			library:create("UICorner", {
+				Parent = selfDot,
+				CornerRadius = UDim.new(1, 0),
+			})
+			cfg.selfDot = selfDot
+
+			function cfg.set_size(size)
+				frame.Size = dim2(0, size, 0, size)
+			end
+
+			function cfg.set_element_visible(bool)
+				frame.Visible = bool
+			end
+
+			cfg.set_element_visible(cfg.visible)
+
+			library.visible_flags[cfg.flag] = cfg.set_element_visible
+
+			return setmetatable(cfg, library)
+		end 
+
+		function library:radarpanel(options)
+			local panel = self:panel({
+				name = options.name or "Radar",
+				size = options.size or dim2(0, 270, 0, 280),
+				position = options.position or dim2(0, 500, 0, 500),
+			})
+
+			local radar = self:radar({
+				holder = panel.items.holder,
+				flag = options.flag or "Radar_Element",
+				size = options.radar_size or 200,
+				visible = false,
+			})
+
+			local function set_visible(bool)
+				panel.items.sgui.Enabled = bool
+			end
+
+			radar.set_panel_visible = set_visible
+			radar.panel = panel
+
+			set_visible(radar.visible)
+
+			return radar
+		end 
+
 		function library:playerlist(options) 
 			local cfg = {
 				callback = options.callback or function() end, 

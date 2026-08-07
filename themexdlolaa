@@ -677,8 +677,10 @@
 						BorderSizePixel = 0,
 						BackgroundColor3 = themes.preset.outline
 					})
-					library:draggify(items.main_holder)
-					library:make_resizable(items.main_holder)
+					if options.draggable ~= false then
+						library:draggify(items.main_holder)
+						library:make_resizable(items.main_holder)
+					end
 
 					--library:apply_theme(main_holder, "outline", "BackgroundColor3") 
 					
@@ -5645,26 +5647,6 @@
 			makeLine(0.5, 0.002)
 			makeLine(0.002, 0.5)
 
-			local selfRing = library:create("Frame", {
-				Parent = frame,
-				Name = "SelfRing",
-				Size = dim2(0, 18, 0, 18),
-				Position = dim2(0.5, 0, 0.5, 0),
-				AnchorPoint = vec2(0.5, 0.5),
-				BackgroundTransparency = 1,
-				BorderSizePixel = 0,
-			})
-			library:create("UICorner", {
-				Parent = selfRing,
-				CornerRadius = UDim.new(1, 0),
-			})
-			library:create("UIStroke", {
-				Parent = selfRing,
-				Color = themes.preset.accent,
-				Thickness = 1,
-				Transparency = 0.35,
-			})
-
 			local selfDot = library:create("Frame", {
 				Parent = frame,
 				Name = "Self",
@@ -5679,6 +5661,25 @@
 				CornerRadius = UDim.new(1, 0),
 			})
 			cfg.selfDot = selfDot
+
+			local sweep = library:create("Frame", {
+				Parent = frame,
+				Name = "Sweep",
+				Size = dim2(0.5, 0, 0.002, 0),
+				Position = dim2(0.5, 0, 0.5, 0),
+				AnchorPoint = vec2(0, 0.5),
+				BackgroundColor3 = themes.preset.accent,
+				BackgroundTransparency = 0.5,
+				BorderSizePixel = 0,
+				ZIndex = 6,
+			})
+			library:apply_theme(sweep, "accent", "BackgroundColor3")
+
+			local sweep_rotation = 0
+			library:connection(run.RenderStepped, function(dt)
+				sweep_rotation = sweep_rotation + (dt or 0.016) * 150
+				sweep.Rotation = sweep_rotation % 360
+			end)
 
 			function cfg.set_size(size)
 				frame.Size = dim2(0, size, 0, size)
@@ -5700,6 +5701,7 @@
 				name = options.name or "Radar",
 				size = options.size or dim2(0, 280, 0, 280),
 				position = options.position or dim2(0, 500, 0, 500),
+				draggable = false,
 			})
 
 			panel.items.main_holder.ClipsDescendants = true
@@ -5735,8 +5737,6 @@
 				size = options.radar_size or 246,
 				visible = false,
 			})
-
-			radar.frame.Size = dim2(1, -4, 1, -4)
 
 			local function set_visible(bool)
 				panel.items.sgui.Enabled = bool

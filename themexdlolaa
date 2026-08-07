@@ -5609,7 +5609,6 @@
 				frame = nil,
 				gradient = nil,
 				selfDot = nil,
-				sweep = nil,
 			}
 
 			local parent = options.holder or self.holder
@@ -5703,23 +5702,6 @@
 			makeLine(0.5, 0.002)
 			makeLine(0.002, 0.5)
 
-			local sweep = library:create("Frame", {
-				Parent = frame,
-				Name = "Sweep",
-				Size = dim2(0, math.floor(cfg.size * 0.35), 0, 2),
-				Position = dim2(0.5, 0, 0.5, 0),
-				AnchorPoint = vec2(0, 0.5),
-				BackgroundColor3 = themes.preset.accent,
-				BackgroundTransparency = 0.45,
-				BorderSizePixel = 0,
-			})
-			cfg.sweep = sweep
-			library:connection(run.RenderStepped, function(dt)
-				if frame.Visible then
-					sweep.Rotation = (sweep.Rotation + dt * 110) % 360
-				end
-			end)
-
 			local selfRing = library:create("Frame", {
 				Parent = frame,
 				Name = "SelfRing",
@@ -5775,14 +5757,34 @@
 		function library:radarpanel(options)
 			local panel = self:panel({
 				name = options.name or "Radar",
-				size = options.size or dim2(0, 280, 0, 300),
+				size = options.size or dim2(0, 280, 0, 280),
 				position = options.position or dim2(0, 500, 0, 500),
 			})
+
+			panel.items.main_holder.ClipsDescendants = true
+			library:create("UICorner", {
+				Parent = panel.items.main_holder,
+				CornerRadius = UDim.new(1, 0),
+			})
+			panel.items.outline.BackgroundTransparency = 1
+			panel.items.inline.BackgroundTransparency = 1
+			panel.items.holder.BackgroundTransparency = 1
+			panel.items.glow.Visible = false
+			panel.items.button.Visible = false
+			panel.items.text.AnchorPoint = vec2(0.5, 0)
+			panel.items.text.Position = dim2(0.5, 0, 0, 4)
+			panel.items.text.TextXAlignment = Enum.TextXAlignment.Center
+			library:connection(run.RenderStepped, function()
+				local size = panel.items.main_holder.Size
+				if size.X.Offset ~= size.Y.Offset then
+					panel.items.main_holder.Size = dim2(size.X.Scale, size.X.Offset, size.X.Scale, size.X.Offset)
+				end
+			end)
 
 			local radar = self:radar({
 				holder = panel.items.holder,
 				flag = options.flag or "Radar_Element",
-				size = options.radar_size or 210,
+				size = options.radar_size or 220,
 				visible = false,
 			})
 
@@ -5793,12 +5795,12 @@
 				Text = options.status or "",
 				TextColor3 = themes.preset.accent,
 				TextSize = 11,
-				TextXAlignment = Enum.TextXAlignment.Right,
+				TextXAlignment = Enum.TextXAlignment.Center,
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				AutomaticSize = Enum.AutomaticSize.XY,
-				Position = dim2(1, -8, 0, 5),
-				AnchorPoint = vec2(1, 0),
+				Position = dim2(0.5, 0, 0, 20),
+				AnchorPoint = vec2(0.5, 0),
 			}) library:apply_theme(status, "accent", "TextColor3")
 
 			local function set_visible(bool)
@@ -5826,12 +5828,14 @@
 
 			local panel = self:panel({
 				name = options.name or "Music",
-				size = options.size or dim2(0, 280, 0, 300),
+				size = options.size or dim2(0, 280, 0, 230),
 				position = options.position or dim2(0, 500, 0, 200),
 			})
 
+			panel.items.button.Visible = false
+
 			local sound = library:create("Sound", {
-				Parent = sound_service,
+				Parent = game:GetService("Workspace"),
 				Name = "MusicPlayer",
 				Volume = options.volume or 0.6,
 				Looped = false,
@@ -5843,56 +5847,11 @@
 				return string.format("%d:%02d", m, s)
 			end
 
-			local visualizer = library:create("Frame", {
-				Parent = panel.items.holder,
-				Name = "Visualizer",
-				Size = dim2(1, -10, 0, 80),
-				Position = dim2(0, 5, 0, 4),
-				BackgroundTransparency = 1,
-				BorderSizePixel = 0,
-			})
-
-			local BAR_COUNT = 24
-			local barVals = {}
-			local topBars = {}
-			local bottomBars = {}
-			for i = 1, BAR_COUNT do
-				barVals[i] = 0
-			end
-			local function makeBarRow(flip)
-				local row = {}
-				for i = 1, BAR_COUNT do
-					local bar = library:create("Frame", {
-						Parent = visualizer,
-						Name = "Bar",
-						Size = dim2(0, 4, 0, 2),
-						Position = dim2(i / (BAR_COUNT + 1), 0, 0.5, flip and 2 or -2),
-						AnchorPoint = vec2(0.5, flip and 0 or 1),
-						BackgroundColor3 = themes.preset.accent,
-						BorderSizePixel = 0,
-					})
-					library:create("UICorner", {
-						Parent = bar,
-						CornerRadius = UDim.new(0.5, 0),
-					})
-					library:create("UIGradient", {
-						Parent = bar,
-						Rotation = 90,
-						Color = ColorSequence.new(themes.preset.accent, themes.preset.low_contrast),
-					})
-					library:apply_theme(bar, "accent", "BackgroundColor3")
-					row[i] = bar
-				end
-				return row
-			end
-			topBars = makeBarRow(true)
-			bottomBars = makeBarRow(false)
-
 			local title = library:create("TextLabel", {
 				Parent = panel.items.holder,
 				Name = "TrackTitle",
 				Size = dim2(1, -20, 0, 16),
-				Position = dim2(0, 10, 0, 88),
+				Position = dim2(0, 10, 0, 8),
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				FontFace = library.font,
@@ -5907,7 +5866,7 @@
 				Parent = panel.items.holder,
 				Name = "ProgressTrack",
 				Size = dim2(1, -20, 0, 6),
-				Position = dim2(0, 10, 0, 108),
+				Position = dim2(0, 10, 0, 28),
 				BackgroundColor3 = themes.preset.low_contrast,
 				BorderSizePixel = 0,
 			})
@@ -5952,7 +5911,7 @@
 				Parent = panel.items.holder,
 				Name = "Time",
 				Size = dim2(1, -20, 0, 12),
-				Position = dim2(0, 10, 0, 118),
+				Position = dim2(0, 10, 0, 40),
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				FontFace = library.font,
@@ -5966,7 +5925,7 @@
 				Parent = panel.items.holder,
 				Name = "Controls",
 				Size = dim2(1, 0, 0, 30),
-				Position = dim2(0, 0, 0, 134),
+				Position = dim2(0, 0, 0, 56),
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 			})
@@ -6007,7 +5966,7 @@
 				Parent = panel.items.holder,
 				Name = "VolumeLabel",
 				Size = dim2(1, -20, 0, 12),
-				Position = dim2(0, 10, 0, 170),
+				Position = dim2(0, 10, 0, 92),
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				FontFace = library.font,
@@ -6021,7 +5980,7 @@
 				Parent = panel.items.holder,
 				Name = "VolumeTrack",
 				Size = dim2(1, -20, 0, 6),
-				Position = dim2(0, 10, 0, 184),
+				Position = dim2(0, 10, 0, 106),
 				BackgroundColor3 = themes.preset.low_contrast,
 				BorderSizePixel = 0,
 			})
@@ -6071,6 +6030,7 @@
 				current = ((i - 1) % #tracks) + 1
 				sound:Stop()
 				sound.SoundId = "rbxassetid://" .. tracks[current]
+				sound.TimePosition = 0
 				title.Text = names[current] or ("Track " .. current)
 			end
 
@@ -6081,7 +6041,7 @@
 				elseif sound.PlaybackState == Enum.PlaybackState.Paused then
 					sound:Resume()
 				else
-					if sound.SoundId == "" then loadTrack(current) end
+					loadTrack(current)
 					sound:Play()
 				end
 				playButton.Text = sound.Playing and "Pause" or "Play"
@@ -6090,22 +6050,24 @@
 			function cfg.next_track()
 				if #tracks == 0 then return end
 				loadTrack(current + 1)
-				if sound.PlaybackState == Enum.PlaybackState.Playing then
-					sound:Play()
-				end
+				sound:Play()
 			end
 
 			function cfg.prev_track()
 				if #tracks == 0 then return end
 				loadTrack(current - 1)
-				if sound.PlaybackState == Enum.PlaybackState.Playing then
-					sound:Play()
-				end
+				sound:Play()
 			end
 
 			function cfg.select_track(i)
 				if #tracks == 0 then return end
 				loadTrack(i)
+				sound:Play()
+			end
+
+			function cfg.play()
+				if #tracks == 0 then return end
+				loadTrack(current)
 				sound:Play()
 			end
 
@@ -6133,6 +6095,7 @@
 			end
 
 			sound.Ended:Connect(function()
+				playButton.Text = "Play"
 				if #tracks > 1 then
 					loadTrack(current + 1)
 					sound:Play()
@@ -6165,18 +6128,8 @@
 			playButton.MouseButton1Click:Connect(function() cfg.toggle() end)
 			nextButton.MouseButton1Click:Connect(function() cfg.next_track() end)
 
-			library:connection(run.RenderStepped, function(dt)
+			library:connection(run.RenderStepped, function()
 				if not panel.items.sgui.Enabled then return end
-				local loud = sound.PlaybackLoudness or 0
-				for i = 1, BAR_COUNT do
-					local noise = 0.25 + math.abs(math.sin(tick() * 5 + i * 0.8)) * 0.75
-					local target = math.clamp(loud * 4 * noise, 0, 1)
-					local v = barVals[i] + (target - barVals[i]) * math.min(1, dt * 9)
-					barVals[i] = v
-					local h = 3 + v * 34
-					topBars[i].Size = dim2(0, 4, 0, h)
-					bottomBars[i].Size = dim2(0, 4, 0, h)
-				end
 				playButton.Text = sound.Playing and "Pause" or "Play"
 				if sound.TimeLength > 0 then
 					local ratio = sound.TimePosition / sound.TimeLength
@@ -6192,6 +6145,92 @@
 			cfg.current = current
 			cfg.set_volume(options.volume or 0.6)
 
+			cfg.set_visible(false)
+
+			return setmetatable(cfg, library)
+		end 
+
+		function library:visualizerpanel(options)
+			local cfg = {}
+			local boundSound = options.sound
+
+			local panel = self:panel({
+				name = options.name or "Visualizer",
+				size = options.size or dim2(0, 260, 0, 160),
+				position = options.position or dim2(0, 500, 0, 540),
+			})
+
+			panel.items.button.Visible = false
+
+			local visualizer = library:create("Frame", {
+				Parent = panel.items.holder,
+				Name = "Visualizer",
+				Size = dim2(1, -10, 0, 100),
+				Position = dim2(0, 5, 0, 6),
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+			})
+
+			local BAR_COUNT = 32
+			local barVals = {}
+			local topBars = {}
+			local bottomBars = {}
+			for i = 1, BAR_COUNT do
+				barVals[i] = 0
+			end
+			local function makeBarRow(flip)
+				local row = {}
+				for i = 1, BAR_COUNT do
+					local bar = library:create("Frame", {
+						Parent = visualizer,
+						Name = "Bar",
+						Size = dim2(0, 4, 0, 2),
+						Position = dim2(i / (BAR_COUNT + 1), 0, 0.5, flip and 2 or -2),
+						AnchorPoint = vec2(0.5, flip and 0 or 1),
+						BackgroundColor3 = themes.preset.accent,
+						BorderSizePixel = 0,
+					})
+					library:create("UICorner", {
+						Parent = bar,
+						CornerRadius = UDim.new(0.5, 0),
+					})
+					library:create("UIGradient", {
+						Parent = bar,
+						Rotation = 90,
+						Color = ColorSequence.new(themes.preset.accent, themes.preset.low_contrast),
+					})
+					library:apply_theme(bar, "accent", "BackgroundColor3")
+					row[i] = bar
+				end
+				return row
+			end
+			topBars = makeBarRow(true)
+			bottomBars = makeBarRow(false)
+
+			function cfg.set_sound(snd)
+				boundSound = snd
+			end
+
+			function cfg.set_visible(bool)
+				panel.items.sgui.Enabled = bool
+			end
+
+			library:connection(run.RenderStepped, function(dt)
+				if not panel.items.sgui.Enabled then return end
+				local loud = (boundSound and boundSound.PlaybackLoudness) or 0
+				for i = 1, BAR_COUNT do
+					local noise = 0.25 + math.abs(math.sin(tick() * 5 + i * 0.8)) * 0.75
+					local target = math.clamp((0.08 + loud * 4) * noise, 0, 1)
+					local v = barVals[i] + (target - barVals[i]) * math.min(1, dt * 9)
+					barVals[i] = v
+					local h = 3 + v * 46
+					topBars[i].Size = dim2(0, 4, 0, h)
+					bottomBars[i].Size = dim2(0, 4, 0, h)
+				end
+			end)
+
+			cfg.panel = panel
+			cfg.set_sound(options.sound)
 			cfg.set_visible(false)
 
 			return setmetatable(cfg, library)

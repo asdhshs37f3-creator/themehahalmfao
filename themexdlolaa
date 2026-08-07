@@ -680,35 +680,6 @@
 					library:draggify(items.main_holder)
 					library:make_resizable(items.main_holder)
 
-					local Close = library:create( "TextButton" , {
-						Parent = items.main_holder;
-						FontFace = library.font;
-						Name = "\0";
-						AnchorPoint = vec2(1, 0);
-						Active = false;
-						BorderColor3 = rgb(0, 0, 0);
-						Text = "X";
-						Size = dim2(0, 0, 0, 0);
-						Selectable = false;
-						Position = dim2(1, -7, 0, 5);
-						BorderSizePixel = 0;
-						BackgroundTransparency = 1;
-						TextXAlignment = Enum.TextXAlignment.Right;
-						AutomaticSize = Enum.AutomaticSize.XY;
-						TextColor3 = themes.preset.text;
-						TextSize = 12;
-						ZIndex = 100;
-						BackgroundColor3 = rgb(255, 255, 255)
-					});
-
-					library:create( "UIStroke" , {
-						Parent = Close
-					});         
-					
-					Close.MouseButton1Click:Connect(function()
-						items.sgui.Enabled = false;
-					end)
-
 					--library:apply_theme(main_holder, "outline", "BackgroundColor3") 
 					
 					items.window_inline = library:create("Frame", {
@@ -5638,9 +5609,31 @@
 				frame = nil,
 				gradient = nil,
 				selfDot = nil,
+				sweep = nil,
 			}
 
 			local parent = options.holder or self.holder
+
+			local ring = library:create("Frame", {
+				Parent = parent,
+				Name = "Ring",
+				Size = dim2(0, cfg.size + 12, 0, cfg.size + 12),
+				Position = dim2(0.5, 0, 0.5, 0),
+				AnchorPoint = vec2(0.5, 0.5),
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Visible = cfg.visible,
+			})
+			library:create("UICorner", {
+				Parent = ring,
+				CornerRadius = UDim.new(1, 0),
+			})
+			library:create("UIStroke", {
+				Parent = ring,
+				Color = themes.preset.accent,
+				Thickness = 1,
+				Transparency = 0.4,
+			})
 
 			local frame = library:create("Frame", {
 				Parent = parent,
@@ -5676,6 +5669,26 @@
 				Transparency = 0.5,
 			})
 
+			local innerRing = library:create("Frame", {
+				Parent = frame,
+				Name = "InnerRing",
+				Size = dim2(0.7, 0, 0.7, 0),
+				Position = dim2(0.5, 0, 0.5, 0),
+				AnchorPoint = vec2(0.5, 0.5),
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+			})
+			library:create("UICorner", {
+				Parent = innerRing,
+				CornerRadius = UDim.new(1, 0),
+			})
+			library:create("UIStroke", {
+				Parent = innerRing,
+				Color = themes.preset.text,
+				Thickness = 1,
+				Transparency = 0.85,
+			})
+
 			local function makeLine(sizeX, sizeY)
 				library:create("Frame", {
 					Parent = frame,
@@ -5689,6 +5702,43 @@
 			end
 			makeLine(0.5, 0.002)
 			makeLine(0.002, 0.5)
+
+			local sweep = library:create("Frame", {
+				Parent = frame,
+				Name = "Sweep",
+				Size = dim2(0, math.floor(cfg.size * 0.35), 0, 2),
+				Position = dim2(0.5, 0, 0.5, 0),
+				AnchorPoint = vec2(0, 0.5),
+				BackgroundColor3 = themes.preset.accent,
+				BackgroundTransparency = 0.45,
+				BorderSizePixel = 0,
+			})
+			cfg.sweep = sweep
+			library:connection(run.RenderStepped, function(dt)
+				if frame.Visible then
+					sweep.Rotation = (sweep.Rotation + dt * 110) % 360
+				end
+			end)
+
+			local selfRing = library:create("Frame", {
+				Parent = frame,
+				Name = "SelfRing",
+				Size = dim2(0, 18, 0, 18),
+				Position = dim2(0.5, 0, 0.5, 0),
+				AnchorPoint = vec2(0.5, 0.5),
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+			})
+			library:create("UICorner", {
+				Parent = selfRing,
+				CornerRadius = UDim.new(1, 0),
+			})
+			library:create("UIStroke", {
+				Parent = selfRing,
+				Color = themes.preset.accent,
+				Thickness = 1,
+				Transparency = 0.35,
+			})
 
 			local selfDot = library:create("Frame", {
 				Parent = frame,
@@ -5707,10 +5757,12 @@
 
 			function cfg.set_size(size)
 				frame.Size = dim2(0, size, 0, size)
+				ring.Size = dim2(0, size + 12, 0, size + 12)
 			end
 
 			function cfg.set_element_visible(bool)
 				frame.Visible = bool
+				ring.Visible = bool
 			end
 
 			cfg.set_element_visible(cfg.visible)
@@ -5723,23 +5775,43 @@
 		function library:radarpanel(options)
 			local panel = self:panel({
 				name = options.name or "Radar",
-				size = options.size or dim2(0, 270, 0, 280),
+				size = options.size or dim2(0, 280, 0, 300),
 				position = options.position or dim2(0, 500, 0, 500),
 			})
 
 			local radar = self:radar({
 				holder = panel.items.holder,
 				flag = options.flag or "Radar_Element",
-				size = options.radar_size or 200,
+				size = options.radar_size or 210,
 				visible = false,
 			})
+
+			local status = library:create("TextLabel", {
+				Parent = panel.items.window_holder,
+				Name = "Status",
+				FontFace = library.font,
+				Text = options.status or "",
+				TextColor3 = themes.preset.accent,
+				TextSize = 11,
+				TextXAlignment = Enum.TextXAlignment.Right,
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				AutomaticSize = Enum.AutomaticSize.XY,
+				Position = dim2(1, -8, 0, 5),
+				AnchorPoint = vec2(1, 0),
+			}) library:apply_theme(status, "accent", "TextColor3")
 
 			local function set_visible(bool)
 				panel.items.sgui.Enabled = bool
 			end
 
+			function radar.set_status(text)
+				status.Text = text or ""
+			end
+
 			radar.set_panel_visible = set_visible
 			radar.panel = panel
+			radar.status_label = status
 
 			set_visible(radar.visible)
 

@@ -5607,32 +5607,10 @@
 				visible = options.visible or true,
 				size = options.size or 200,
 				frame = nil,
-				gradient = nil,
 				selfDot = nil,
 			}
 
 			local parent = options.holder or self.holder
-
-			local ring = library:create("Frame", {
-				Parent = parent,
-				Name = "Ring",
-				Size = dim2(0, cfg.size + 12, 0, cfg.size + 12),
-				Position = dim2(0.5, 0, 0.5, 0),
-				AnchorPoint = vec2(0.5, 0.5),
-				BackgroundTransparency = 1,
-				BorderSizePixel = 0,
-				Visible = cfg.visible,
-			})
-			library:create("UICorner", {
-				Parent = ring,
-				CornerRadius = UDim.new(1, 0),
-			})
-			library:create("UIStroke", {
-				Parent = ring,
-				Color = themes.preset.accent,
-				Thickness = 1,
-				Transparency = 0.4,
-			})
 
 			local frame = library:create("Frame", {
 				Parent = parent,
@@ -5640,8 +5618,7 @@
 				Size = dim2(0, cfg.size, 0, cfg.size),
 				Position = dim2(0.5, 0, 0.5, 0),
 				AnchorPoint = vec2(0.5, 0.5),
-				BackgroundColor3 = themes.preset.low_contrast,
-				BackgroundTransparency = 0.4,
+				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				ClipsDescendants = true,
 				ZIndex = 5,
@@ -5652,40 +5629,6 @@
 			library:create("UICorner", {
 				Parent = frame,
 				CornerRadius = UDim.new(1, 0),
-			})
-
-			local gradient = library:create("UIGradient", {
-				Parent = frame,
-				Rotation = 90,
-				Color = ColorSequence.new(themes.preset.high_contrast, themes.preset.low_contrast),
-			})
-			cfg.gradient = gradient
-
-			library:create("UIStroke", {
-				Parent = frame,
-				Color = themes.preset.outline,
-				Thickness = 1.5,
-				Transparency = 0.5,
-			})
-
-			local innerRing = library:create("Frame", {
-				Parent = frame,
-				Name = "InnerRing",
-				Size = dim2(0.7, 0, 0.7, 0),
-				Position = dim2(0.5, 0, 0.5, 0),
-				AnchorPoint = vec2(0.5, 0.5),
-				BackgroundTransparency = 1,
-				BorderSizePixel = 0,
-			})
-			library:create("UICorner", {
-				Parent = innerRing,
-				CornerRadius = UDim.new(1, 0),
-			})
-			library:create("UIStroke", {
-				Parent = innerRing,
-				Color = themes.preset.text,
-				Thickness = 1,
-				Transparency = 0.85,
 			})
 
 			local function makeLine(sizeX, sizeY)
@@ -5739,12 +5682,10 @@
 
 			function cfg.set_size(size)
 				frame.Size = dim2(0, size, 0, size)
-				ring.Size = dim2(0, size + 12, 0, size + 12)
 			end
 
 			function cfg.set_element_visible(bool)
 				frame.Visible = bool
-				ring.Visible = bool
 			end
 
 			cfg.set_element_visible(cfg.visible)
@@ -5780,9 +5721,7 @@
 			panel.items.holder.BackgroundTransparency = 1
 			panel.items.glow.Visible = false
 			panel.items.button.Visible = false
-			panel.items.text.AnchorPoint = vec2(0, 0)
-			panel.items.text.Position = dim2(0, 5, 0, 6)
-			panel.items.text.TextXAlignment = Enum.TextXAlignment.Left
+			panel.items.text.Visible = false
 			library:connection(run.RenderStepped, function()
 				local size = panel.items.main_holder.Size
 				if size.X.Offset ~= size.Y.Offset then
@@ -5796,6 +5735,8 @@
 				size = options.radar_size or 246,
 				visible = false,
 			})
+
+			radar.frame.Size = dim2(1, -4, 1, -4)
 
 			local function set_visible(bool)
 				panel.items.sgui.Enabled = bool

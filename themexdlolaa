@@ -5744,6 +5744,7 @@
 			}
 
 			local selected_button; 
+			local show_player_detail; 
 
 			local patterns = {
 				["Priority"] = rgb(255, 255, 0),
@@ -5897,12 +5898,7 @@
 			function cfg.create_player(player) 
 				library.playerlist_data[tostring(player)] = {}
 				local path = library.playerlist_data[tostring(player)]
-
-				local pName = tostring(player)
-				local pObj = players:FindFirstChild(pName)
-				local displayName = pObj and pObj.DisplayName or pName
-				local userId = pObj and pObj.UserId
-
+				
 				local TextButton = library:create("TextButton", {
 					Parent = ScrollingFrame,
 					Name = "",
@@ -5911,29 +5907,10 @@
 					BorderColor3 = rgb(0, 0, 0),
 					Text = "",
 					BackgroundTransparency = 1,
-					Size = dim2(1, 0, 0, 68),
+					Size = dim2(1, 0, 0, 24),
 					BorderSizePixel = 0,
 					TextSize = 12,
 					BackgroundColor3 = rgb(255, 255, 255)
-				})
-
-				local avatar = library:create("ImageLabel", {
-					Parent = TextButton,
-					Name = "",
-					Position = dim2(0, 4, 0, 4),
-					Size = dim2(0, 34, 0, 34),
-					BackgroundTransparency = 1,
-					BorderSizePixel = 0,
-					BackgroundColor3 = themes.preset.inline
-				})
-				library:create("UICorner", {
-					Parent = avatar,
-					CornerRadius = UDim.new(1, 0),
-				})
-				library:create("UIStroke", {
-					Parent = avatar,
-					Color = themes.preset.outline,
-					Thickness = 1,
 				})
 
 				local player_name = library:create("TextLabel", {
@@ -5941,127 +5918,33 @@
 					FontFace = library.font,
 					TextColor3 = themes.preset.text,
 					BorderColor3 = rgb(0, 0, 0),
-					Text = pName,
+					Text = tostring(player),
 					BorderSizePixel = 0,
 					BackgroundTransparency = 1,
 					TextXAlignment = Enum.TextXAlignment.Left,
 					TextTruncate = Enum.TextTruncate.AtEnd,
-					Position = dim2(0, 44, 0, 4),
-					Size = dim2(1, -48, 0, 16),
-					TextSize = 13,
+					Position = dim2(0, 4, 0, 2),
+					Size = dim2(1, -8, 0, 18),
+					TextSize = 12,
 					BackgroundColor3 = rgb(255, 255, 255)
 				})
 				library:apply_theme(player_name, "text", "TextColor3") 
-								
-				local display_label = library:create("TextLabel", {
-					Parent = TextButton,
-					FontFace = library.font,
-					TextColor3 = themes.preset.accent,
-					BorderColor3 = rgb(0, 0, 0),
-					Text = displayName,
-					BorderSizePixel = 0,
-					BackgroundTransparency = 1,
-					TextXAlignment = Enum.TextXAlignment.Left,
-					TextTruncate = Enum.TextTruncate.AtEnd,
-					Position = dim2(0, 44, 0, 22),
-					Size = dim2(1, -48, 0, 16),
-					TextSize = 11,
-					BackgroundColor3 = rgb(255, 255, 255)
-				})
-				library:apply_theme(display_label, "accent", "TextColor3") 
-
+				
 				local priority_text = library:create("TextLabel", {
 					Parent = TextButton,
 					Name = "",
 					FontFace = library.font,
-					TextColor3 = pName ~= lp.Name and themes.preset.text or rgb(0, 0, 255),
+					TextColor3 = tostring(player) ~= lp.Name and themes.preset.text or rgb(0, 0, 255),
 					BorderColor3 = rgb(0, 0, 0),
-					Text = pName ~= lp.Name and "Neutral" or "LocalPlayer",
+					Text = tostring(player) ~= lp.Name and "Neutral" or "LocalPlayer",
 					BackgroundTransparency = 1,
-					TextXAlignment = Enum.TextXAlignment.Left,
+					TextXAlignment = Enum.TextXAlignment.Right,
 					BorderSizePixel = 0,
-					Position = dim2(0, 44, 0, 40),
-					Size = dim2(1, -48, 0, 16),
-					TextSize = 11,
-					Visible = false,
+					Position = dim2(1, -58, 0, 2),
+					Size = dim2(0, 54, 0, 18),
+					TextSize = 12,
 					BackgroundColor3 = rgb(255, 255, 255)
 				})
-
-				local function makeActionButton(text, xpos, width)
-					local btn = library:create("TextButton", {
-						Parent = TextButton,
-						Name = "",
-						FontFace = library.font,
-						Text = text,
-						TextColor3 = themes.preset.accent,
-						TextSize = 10,
-						BorderColor3 = rgb(0, 0, 0),
-						BorderSizePixel = 0,
-						Position = dim2(0, xpos, 0, 44),
-						Size = dim2(0, width, 0, 20),
-						BackgroundColor3 = themes.preset.low_contrast
-					})
-					library:apply_theme(btn, "accent", "TextColor3")
-					library:create("UIStroke", {
-						Parent = btn,
-						Color = themes.preset.outline,
-						Thickness = 1,
-					})
-					library:create("UICorner", {
-						Parent = btn,
-						CornerRadius = UDim.new(0, 3),
-					})
-					return btn
-				end
-
-				local teleport_btn = makeActionButton("Teleport", 4, 44)
-				local spectate_btn = makeActionButton("Spectate", 52, 48)
-
-				teleport_btn.MouseButton1Click:Connect(function()
-					local target = players:FindFirstChild(pName)
-					local myChar = lp.Character
-					local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
-					local targetHRP = target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
-					if myHRP and targetHRP then
-						myHRP.CFrame = targetHRP.CFrame + Vector3.new(0, 3, 0)
-						library:notification({text = "Teleported to " .. pName, time = 2})
-					else
-						library:notification({text = "Could not teleport", time = 2})
-					end
-				end)
-
-				spectate_btn.MouseButton1Click:Connect(function()
-					if library.spectate_target == pName then
-						library.spectate_target = nil
-						local myChar = lp.Character
-						local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
-						if myHum then
-							ws.CurrentCamera.CameraSubject = myHum
-						end
-						library:notification({text = "Stopped spectating", time = 2})
-					else
-						local target = players:FindFirstChild(pName)
-						local targetHum = target and target.Character and target.Character:FindFirstChildOfClass("Humanoid")
-						if targetHum then
-							library.spectate_target = pName
-							ws.CurrentCamera.CameraSubject = targetHum
-							library:notification({text = "Spectating " .. pName, time = 2})
-						else
-							library:notification({text = pName .. " has no humanoid", time = 2})
-						end
-					end
-				end)
-
-				if pObj and userId then
-					task.spawn(function()
-						local ok, thumb = pcall(function()
-							return players:GetUserThumbnailAsync(userId, Enum.ThumbnailType.AvatarBust, Enum.ThumbnailSize.Size48)
-						end)
-						if ok and thumb and avatar and avatar.Parent then
-							avatar.Image = thumb
-						end
-					end)
-				end
 
 				local line = library:create("Frame", {
 					Parent = ScrollingFrame,
@@ -6093,10 +5976,8 @@
 					library.selected_player = player_name.Text
 					library.config_flags["PLAYERLIST_DROPDOWN"](path.priority_text.Text)
 
-					if cfg.labels.name then 
-						cfg.labels.name.set("User: " .. player_name.Text)
-						cfg.labels.display.set("DisplayName: " .. (pObj and pObj.DisplayName or player_name.Text))
-						cfg.labels.uid.set("User Id: " .. (userId or "?"))
+					if show_player_detail then 
+						show_player_detail(player_name.Text)
 					end
 				end)
 
@@ -6178,9 +6059,175 @@
 			self:textbox({name = "Search", callback = function(txt)
 				cfg.search(txt)
 			end})
-			cfg.labels.name = self:label({name = "Name: ??"})
-			cfg.labels.display = self:label({name = "Display Name: ??"})
-			cfg.labels.uid = self:label({name = "User Id: ??"})
+
+			-- selected player detail
+			local detail_current = nil
+			local detail_frame = library:create("Frame", {
+				Parent = self.holder,
+				Name = "",
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Size = dim2(1, 0, 0, 84),
+			})
+
+			local detail_avatar = library:create("ImageLabel", {
+				Parent = detail_frame,
+				Name = "",
+				Position = dim2(0, 0, 0, 0),
+				Size = dim2(0, 40, 0, 40),
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				BackgroundColor3 = themes.preset.inline
+			})
+			library:create("UICorner", {
+				Parent = detail_avatar,
+				CornerRadius = UDim.new(1, 0),
+			})
+			library:create("UIStroke", {
+				Parent = detail_avatar,
+				Color = themes.preset.outline,
+				Thickness = 1,
+			})
+
+			local detail_name = library:create("TextLabel", {
+				Parent = detail_frame,
+				FontFace = library.font,
+				TextColor3 = themes.preset.text,
+				BorderColor3 = rgb(0, 0, 0),
+				Text = "No player selected",
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Position = dim2(0, 48, 0, 0),
+				Size = dim2(1, -48, 0, 18),
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextTruncate = Enum.TextTruncate.AtEnd,
+				TextSize = 13,
+				BackgroundColor3 = rgb(255, 255, 255)
+			})
+			library:apply_theme(detail_name, "text", "TextColor3")
+
+			local detail_display = library:create("TextLabel", {
+				Parent = detail_frame,
+				FontFace = library.font,
+				TextColor3 = themes.preset.accent,
+				BorderColor3 = rgb(0, 0, 0),
+				Text = "DisplayName: -",
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Position = dim2(0, 48, 0, 20),
+				Size = dim2(1, -48, 0, 16),
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextTruncate = Enum.TextTruncate.AtEnd,
+				TextSize = 11,
+				BackgroundColor3 = rgb(255, 255, 255)
+			})
+			library:apply_theme(detail_display, "accent", "TextColor3")
+
+			local detail_uid = library:create("TextLabel", {
+				Parent = detail_frame,
+				FontFace = library.font,
+				TextColor3 = themes.preset.text,
+				BorderColor3 = rgb(0, 0, 0),
+				Text = "User Id: -",
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Position = dim2(0, 48, 0, 38),
+				Size = dim2(1, -48, 0, 14),
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextTruncate = Enum.TextTruncate.AtEnd,
+				TextSize = 10,
+				BackgroundColor3 = rgb(255, 255, 255)
+			})
+
+			local function detailButton(text, xpos, width)
+				local btn = library:create("TextButton", {
+					Parent = detail_frame,
+					Name = "",
+					FontFace = library.font,
+					Text = text,
+					TextColor3 = themes.preset.accent,
+					TextSize = 10,
+					BorderColor3 = rgb(0, 0, 0),
+					BorderSizePixel = 0,
+					Position = dim2(0, xpos, 0, 56),
+					Size = dim2(0, width, 0, 20),
+					BackgroundColor3 = themes.preset.low_contrast
+				})
+				library:apply_theme(btn, "accent", "TextColor3")
+				library:create("UIStroke", {
+					Parent = btn,
+					Color = themes.preset.outline,
+					Thickness = 1,
+				})
+				library:create("UICorner", {
+					Parent = btn,
+					CornerRadius = UDim.new(0, 3),
+				})
+				return btn
+			end
+			local detail_teleport = detailButton("Teleport", 0, 44)
+			local detail_spectate = detailButton("Spectate", 48, 48)
+
+			show_player_detail = function(pName)
+				detail_current = pName
+				local pObj = players:FindFirstChild(pName)
+				detail_name.Text = pObj and pObj.Name or pName
+				detail_display.Text = "DisplayName: " .. (pObj and pObj.DisplayName or pName)
+				detail_uid.Text = "User Id: " .. (pObj and pObj.UserId or "?")
+				if pObj then
+					task.spawn(function()
+						local ok, thumb = pcall(function()
+							return players:GetUserThumbnailAsync(pObj.UserId, Enum.ThumbnailType.AvatarBust, Enum.ThumbnailSize.Size48)
+						end)
+						if ok and thumb and detail_avatar and detail_avatar.Parent then
+							detail_avatar.Image = thumb
+						end
+					end)
+				end
+			end
+
+			detail_teleport.MouseButton1Click:Connect(function()
+				if not detail_current then
+					library:notification({text = "No player selected", time = 2})
+					return
+				end
+				local target = players:FindFirstChild(detail_current)
+				local myChar = lp.Character
+				local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
+				local targetHRP = target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+				if myHRP and targetHRP then
+					myHRP.CFrame = targetHRP.CFrame + Vector3.new(0, 3, 0)
+					library:notification({text = "Teleported to " .. detail_current, time = 2})
+				else
+					library:notification({text = "Could not teleport", time = 2})
+				end
+			end)
+
+			detail_spectate.MouseButton1Click:Connect(function()
+				if not detail_current then
+					library:notification({text = "No player selected", time = 2})
+					return
+				end
+				if library.spectate_target == detail_current then
+					library.spectate_target = nil
+					local myChar = lp.Character
+					local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
+					if myHum then
+						ws.CurrentCamera.CameraSubject = myHum
+					end
+					library:notification({text = "Stopped spectating", time = 2})
+				else
+					local target = players:FindFirstChild(detail_current)
+					local targetHum = target and target.Character and target.Character:FindFirstChildOfClass("Humanoid")
+					if targetHum then
+						library.spectate_target = detail_current
+						ws.CurrentCamera.CameraSubject = targetHum
+						library:notification({text = "Spectating " .. detail_current, time = 2})
+					else
+						library:notification({text = detail_current .. " has no humanoid", time = 2})
+					end
+				end
+			end)
 
 			return setmetatable(cfg, library)
 		end 

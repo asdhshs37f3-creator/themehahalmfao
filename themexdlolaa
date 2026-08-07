@@ -5665,20 +5665,52 @@
 			local sweep = library:create("Frame", {
 				Parent = frame,
 				Name = "Sweep",
-				Size = dim2(0.5, 0, 0.002, 0),
+				Size = dim2(1, 0, 1, 0),
 				Position = dim2(0.5, 0, 0.5, 0),
-				AnchorPoint = vec2(0, 0.5),
+				AnchorPoint = vec2(0.5, 0.5),
 				BackgroundColor3 = themes.preset.accent,
-				BackgroundTransparency = 0.5,
 				BorderSizePixel = 0,
 				ZIndex = 6,
 			})
 			library:apply_theme(sweep, "accent", "BackgroundColor3")
+			local sweep_grad = library:create("UIGradient", {
+				Parent = sweep,
+				Rotation = 0,
+				Color = ColorSequence.new(themes.preset.accent),
+				Transparency = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 1),
+					NumberSequenceKeypoint.new(0.78, 1),
+					NumberSequenceKeypoint.new(0.93, 0.55),
+					NumberSequenceKeypoint.new(1, 0.05),
+				}),
+			})
+
+			local sweep_dot = library:create("Frame", {
+				Parent = frame,
+				Name = "SweepDot",
+				Size = dim2(0, 6, 0, 6),
+				Position = dim2(0.5, 0, 0.5, 0),
+				AnchorPoint = vec2(0.5, 0.5),
+				BackgroundColor3 = themes.preset.accent,
+				BorderSizePixel = 0,
+				ZIndex = 7,
+			})
+			library:create("UICorner", {
+				Parent = sweep_dot,
+				CornerRadius = UDim.new(1, 0),
+			})
+			library:apply_theme(sweep_dot, "accent", "BackgroundColor3")
 
 			local sweep_rotation = 0
 			library:connection(run.RenderStepped, function(dt)
 				sweep_rotation = sweep_rotation + (dt or 0.016) * 150
-				sweep.Rotation = sweep_rotation % 360
+				local angle = sweep_rotation % 360
+				sweep_grad.Rotation = angle
+				local radius = frame.AbsoluteSize.X / 2
+				if radius > 0 then
+					local rad = math.rad(angle)
+					sweep_dot.Position = UDim2.fromOffset(radius + math.cos(rad) * radius, radius + math.sin(rad) * radius)
+				end
 			end)
 
 			function cfg.set_size(size)

@@ -6084,11 +6084,6 @@
 				Parent = detail_avatar,
 				CornerRadius = UDim.new(1, 0),
 			})
-			library:create("UIStroke", {
-				Parent = detail_avatar,
-				Color = themes.preset.outline,
-				Thickness = 1,
-			})
 
 			local detail_name = library:create("TextLabel", {
 				Parent = detail_frame,

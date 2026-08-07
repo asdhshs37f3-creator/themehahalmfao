@@ -6089,10 +6089,6 @@
 				BorderSizePixel = 0,
 				BackgroundColor3 = themes.preset.inline
 			})
-			library:create("UICorner", {
-				Parent = detail_avatar,
-				CornerRadius = UDim.new(1, 0),
-			})
 
 			local detail_name = library:create("TextLabel", {
 				Parent = detail_frame,
